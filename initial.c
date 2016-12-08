@@ -7,9 +7,8 @@ void animation_coup_de_balai(){
   printf("\x1b[32m\n");
 
   struct timespec tim;
-  tim.tv_sec=0;
+   tim.tv_sec=0;
   tim.tv_nsec=150000000;
-  time_t tv_sec;
   
      for (k=0;k<=28;k++){
        
@@ -52,10 +51,11 @@ void animation_coup_de_balai(){
 }
 
 void arret_brutal(int s){
+  int i;
   printf("\n");
-  animation_coup_de_balai();
+  //  animation_coup_de_balai();
   FILE *fich_cle;
-  char id_lu[50];
+  char id_lu[28];
   int id_sem;
   printf("Coup de balai dans les IPC.\n");
   
@@ -76,6 +76,23 @@ void arret_brutal(int s){
     printf("Destruction de l'ensemble de semaphores impossible\n");
     perror("wtf;");
     exit (-1);
+  }
+  
+  fgets(id_lu,50,fich_cle);
+  int nb_th;
+  nb_th=atoi(id_lu);
+  for (i=0;i<nb_th;i++){
+    fgets(id_lu,50,fich_cle);
+    id_sem=atoi(id_lu);
+    if ((id_sem=semget(id_sem,0,0))==-1){
+      printf("recup impossible\n");
+      perror("ohnon");
+    }
+    if (semctl(id_sem,0,IPC_RMID)==-1){
+      printf("Destruction de l'ensemble de semaphores impossible\n");
+      perror("wtf;");
+      exit (-1);
+    }
   }
   printf("Coup de balai fini\n");
   fclose(fich_cle);
@@ -104,15 +121,18 @@ int main (int argc, char *argv[]){
     usage(argv[0]);
   }
   int nb_archivistes=atoi(argv[1]);
-  //int nb_themes=atoi(argv[2]); /* inutile , directement récupéré avec argv[2] lors de la création des archivistes */
+  int nb_themes=atoi(argv[2]);
+  key_t cle_sem;
   key_t cle_smp;
   FILE *fich_cle;
   char cle_sem_chaine[100]={'\0'};
-
+  char nb_themes_chaine[5]={'\0'};
 
   int id_ens_sem_redacteurs_prio;
   struct sembuf V={0,+1,SEM_UNDO};    
 
+  int id_smp;
+  
   int i;
   pid_t p;
 
@@ -149,10 +169,14 @@ int main (int argc, char *argv[]){
 
             /* 2 - Creation proprement dite                     */
 
-    cle_smp = ftok(FICHIER_CLE,LETTRE_CODE);
-    sprintf(cle_sem_chaine,"%d",cle_smp);
+    cle_sem = ftok(FICHIER_CLE,LETTRE_CODE);
+    sprintf(cle_sem_chaine,"%d",cle_sem);
     fputs(cle_sem_chaine,fich_cle);
-  /**********************************************************************/
+    fputc('\n',fich_cle);
+    sprintf(nb_themes_chaine,"%d",nb_themes);
+    fputs(nb_themes_chaine,fich_cle);
+    fputc('\n',fich_cle);
+    /**********************************************************************/
   /*                                                                    */
   /*                                                                    */
   /*                          Creation des IPC                          */
@@ -160,7 +184,7 @@ int main (int argc, char *argv[]){
   /*                                                                    */
   /*                                                                    */
   /**********************************************************************/
-
+    
     /* 1- Creation de l'ensemble de sémaphores qui contient 5 sémaphores : */
     /*  × 0 mutex_redacteurs                                               */
     /*  × 1 lecture                                                        */
@@ -169,7 +193,7 @@ int main (int argc, char *argv[]){
     /*  × 4 nombre                                                         */
 
 
-    if ((id_ens_sem_redacteurs_prio=semget(cle_smp,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
+    if ((id_ens_sem_redacteurs_prio=semget(cle_sem,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
       printf("Echec creation mutex redacteurs\n");
       perror("mutex_redacteurs fail");
     }
@@ -189,8 +213,25 @@ int main (int argc, char *argv[]){
     perror("5");
     */
             printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
-    fclose(fich_cle);
 
+    /* 2- Creation des segments de memoire partagée (1 par thème)      : */
+    for (i=0;i<nb_themes;i++){
+      cle_smp=ftok(FICHIER_CLE,'a'+i+1);
+      char cle_smp_chaine[50]={'\0'};
+      if ((id_smp=shmget(cle_smp,NB_MAX_ARTICLES*4,IPC_CREAT|IPC_EXCL|0666))==-1)
+      {
+	printf("Création du segment de mémoire partagée impossible\n");
+	exit(1);
+      }
+      printf("%xd\n",cle_smp);
+      sprintf(cle_smp_chaine,"%d",cle_smp);
+      fputs(cle_smp_chaine,fich_cle);
+      sprintf(cle_smp_chaine,"\n");
+      fputs(cle_smp_chaine,fich_cle);
+
+
+    }
+    fclose(fich_cle);
 
 
     /**********************************************************************/
