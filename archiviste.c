@@ -69,7 +69,7 @@ int main (int argc, char *argv[]){
     fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
     tabclef_shm[i]=atoi(id_lu);
     fprintf(stdout,"test de connard %d\n",tabclef_shm[i]);
-    if ((tabid_shm[i]=shmget(tabclef_shm[i],50,IPC_CREAT | IPC_EXCL | 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
+    if ((tabid_shm[i]=shmget(tabclef_shm[i],TAILLE_MAX_SHM*4, 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
       fprintf(stderr,"Probleme dans la création du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
       perror("erreur: ");
       exit(-1);
