@@ -63,18 +63,19 @@ int main (int argc, char *argv[]){
     fprintf(stderr,"Probleme dans la recuperation de la file de message chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
   }
-  
+  printf("J'ai récupéré ta pile CONNARD ! \n");
   /* Récuperation des segments de mémoire partagée de chaque thème */
   i=0;
   while (fgets(id_lu,50,fich_cle)){ // On passe tous les id des shm des themes
     tabclef_shm[i]=atoi(id_lu);
-    i++;
-    fprintf(stdout,"test de connard %d\n",tabclef_shm[i]);
-    if ((tabid_shm[i]=shmget(tabclef_shm[i],NB_MAX_ARTICLES*4, 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
+    fprintf(stdout,"test de connard %d %d %d\n",tabclef_shm[i],atoi(id_lu),i);
+        i++;
+    if ((tabid_shm[i]=shmget(tabclef_shm[i],0, 0))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
       fprintf(stderr,"Probleme dans la recuperation du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
       perror("erreur: ");
       exit(-1);
     }
+    printf("EH OUI SHM DE MORT !\n");
   }    
 
   

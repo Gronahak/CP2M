@@ -53,7 +53,7 @@ void animation_coup_de_balai(){
 void arret_brutal(int s){
   int i;
   printf("\n");
-  //  animation_coup_de_balai();
+  //animation_coup_de_balai();
   FILE *fich_cle;
   char clef_lu[50];
   int id_sem;
@@ -320,7 +320,7 @@ int main (int argc, char *argv[]){
 	    
 	sprintf(arg2,"%d",i);
 	argexecve[1]=arg2;
-	//	execve("./archiviste",argexecve,NULL);
+	execve("./archiviste",argexecve,NULL);
 	exit(-1);
       }
     }
