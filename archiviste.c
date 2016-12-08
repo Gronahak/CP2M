@@ -82,6 +82,8 @@ int main (int argc, char *argv[]){
            i++;
   }    
   nb_shm=i;
+
+
   
   fclose(fich_cle);
 
