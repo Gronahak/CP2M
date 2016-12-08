@@ -77,16 +77,30 @@ void arret_brutal(int s){
     perror("wtf;");
     exit (-1);
   }
-  
+
   fgets(clef_lu,50,fich_cle);
+  id_sem=atoi(clef_lu);
+  printf("<<<%s\n",clef_lu);
+  printf(">>%d\n",id_sem);
+  if ((id_sem=semget(id_sem,0,0))==-1){
+    printf("recup impossible\n");
+    perror("ohnon");
+  }
+  if (semctl(id_sem,IPC_RMID,0)==-1){
+    printf("Destruction de l'ensemble de semaphores impossible\n");
+    perror("wtf;");
+    exit (-1);
+  }
+
+  int id_fm;
+  fgets(clef_lu,50,fich_cle);
+  id_fm=msgget(atoi(clef_lu),0660);
+  msgctl(id_fm,IPC_RMID,NULL);
   
-  int nb_th,id_shm;
-  nb_th=atoi(clef_lu);
-  for (i=0;i<nb_th;i++){
-    fgets(clef_lu,50,fich_cle);
+  
+  int id_shm;
+  while(fgets(clef_lu,50,fich_cle)){
     printf("<<<<<<<%s\n",clef_lu);
-
-
     id_shm=atoi(clef_lu);
     if ((id_shm=shmget(id_shm,0,0))==-1){
       printf("recup impossible\n");
@@ -97,12 +111,6 @@ void arret_brutal(int s){
       perror("wtf;");
       exit (-1);
     }
-  }
-
-  int id_fm;
-  while (fgets(clef_lu,50,fich_cle)){
-    id_fm=msgget(atoi(clef_lu),0660);
-    msgctl(id_fm,IPC_RMID,NULL);
   }
   
   printf("Coup de balai fini\n");
@@ -126,7 +134,6 @@ void usage(const char* chaine){
 int main (int argc, char *argv[]){
 
   srand(getpid());
-  mon_sigaction(SIGINT,arret_brutal);
   
   // pause();
   if (argc!=3){
@@ -135,10 +142,14 @@ int main (int argc, char *argv[]){
   }
   int nb_archivistes=atoi(argv[1]);
   int nb_themes=atoi(argv[2]);
+  
   if (nb_archivistes<2||nb_themes<2){
     usage(argv[0]);
     exit(-1);
   }
+
+  mon_sigaction(SIGINT,arret_brutal);
+
   key_t cle_sem;
   key_t cle_smp;
   FILE *fich_cle;
@@ -192,9 +203,9 @@ int main (int argc, char *argv[]){
     sprintf(cle_sem_chaine,"%d",cle_sem);
     fputs(cle_sem_chaine,fich_cle);
     fputc('\n',fich_cle);
-    sprintf(nb_themes_chaine,"%d",nb_themes);
-    fputs(nb_themes_chaine,fich_cle);
-    fputc('\n',fich_cle);
+
+    
+
     /**********************************************************************/
   /*                                                                    */
   /*                                                                    */
@@ -250,10 +261,21 @@ int main (int argc, char *argv[]){
       printf("Echec creation ES file_archi\n");
       perror("ES file_archi fail");
     }
+    fputc('\n',fich_cle);
 
+    
+    /* 3- Creation de la file de message                                    */
+    clef_filemessage=ftok("archiviste.c",10);
+    if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
+      fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",i);
+      exit(-1);
+    }
 
-	    
-    /* 3- Creation des segments de memoire partagée (1 par thème)      : */
+    sprintf(clef_filemess,"%d",clef_filemessage);
+    fputs(clef_filemess,fich_cle);
+    fputc('\n',fich_cle);
+    
+    /* 4- Creation des segments de memoire partagée (1 par thème)      : */
     for (i=0;i<nb_themes;i++){
       cle_smp=ftok(FICHIER_CLE,'a'+i+2);
       char cle_smp_chaine[50]={'\0'};
@@ -265,11 +287,12 @@ int main (int argc, char *argv[]){
       printf("%xd\n",cle_smp);
       sprintf(cle_smp_chaine,"%d",cle_smp);
       fputs(cle_smp_chaine,fich_cle);
-      sprintf(cle_smp_chaine,"\n");
-      fputs(cle_smp_chaine,fich_cle);
-
+      fputc('\n',fich_cle);
 
     }
+
+    
+    fclose(fich_cle);
 
     /**********************************************************************/
     /*                                                                    */
@@ -297,24 +320,11 @@ int main (int argc, char *argv[]){
 	    
 	sprintf(arg2,"%d",i);
 	argexecve[1]=arg2;
-	execve("./archiviste",argexecve,NULL);
+	//	execve("./archiviste",argexecve,NULL);
 	exit(-1);
       }
-        
-      clef_filemessage=ftok("archiviste.c",i); //i numero d'ordre
-      if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
-	fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",i);
-	exit(-1);
-      }
-
-      sprintf(clef_filemess,"%d",clef_filemessage);
-      fputs(clef_filemess,fich_cle);
-      sprintf(clef_filemess,"\n");
-      fputs(clef_filemess,fich_cle);
     }
-
     
-    fclose(fich_cle);
     /**********************************************************************/
     /*                                                                    */
     /*                                                                    */
@@ -384,7 +394,7 @@ int main (int argc, char *argv[]){
 	  
 	  
 	}
-	execve("./journaliste",argexecve,NULL);
+	  //	execve("./journaliste",argexecve,NULL);
 	exit(-1);
       }
 }

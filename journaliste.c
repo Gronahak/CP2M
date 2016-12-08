@@ -18,7 +18,6 @@ int main (int argc, char *argv[]){
   int i, clef_filemessage,id_filemessage;
   int nb_archiviste=atoi(argv[1]);
   char operation=argv[2][0];
-  int tabid_fm[nb_archiviste],tabclef_fm[nb_archiviste], tablongueur_fm[nb_archiviste];
   int numjournaliste=getpid(); // Ou un param ?
   int nbarchiv_a_appeler=0;
   int tmp;
@@ -33,49 +32,30 @@ int main (int argc, char *argv[]){
     exit(-1);
   }
   
-  /* Lancement file de message du journaliste */
-  clef_filemessage=ftok("journaliste.c",numjournaliste);
-  if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
-    fprintf(stderr,"Probleme dans la création de la file de message du journaliste n°%d.\n",numjournaliste);
+
+  erreur=fgets(id_lu,50,fich_cle); //semaphores1 inutiles ici
+
+  /* On recupere l'ensemble 2 de semaphore */
+  
+  erreur=fgets(id_lu,50,fich_cle); // semaphore2 a traiter
+
+  /*Lancement file de message */
+      
+  erreur=fgets(id_lu,50,fich_cle); // archiviste
+  clef_filemessage=atoi(id_lu);
+
+  if ((id_filemessage=msgget(clef_filemessage,0660))==-1){ 
+    fprintf(stderr,"Probleme dans la recuperation de la file de message.\n");
+    perror("erreur: ");
     exit(-1);
   }
-
-  /*Lancement files de message des archivistes */
-
-  erreur=fgets(id_lu,50,fich_cle); //semaphores inutiles ici
-  erreur=fgets(id_lu,50,fich_cle); // nombre de themes
-  for(i=0; i<atoi(id_lu);i++)
-    erreur=fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
-      if (1==2) return fprintf(stderr,"%s LOL",erreur);
-      
-  for (i=0; i<nb_archiviste; i++){
-    erreur=fgets(id_lu,50,fich_cle); // archiviste
-    tabclef_fm[i]=atoi(id_lu);
-    fprintf(stdout,"test de connard %d\n",tabclef_fm[i]);
-    if ((tabid_fm[i]=msgget(tabclef_fm[i],IPC_CREAT | IPC_EXCL | 0660))==-1){ 
-      fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",i);
-      perror("erreur: ");
-      exit(-1);
-    }
-    if (msgctl(tabid_fm[i],IPC_STAT,info)==-1){
-      fprintf(stderr,"Erreur dans la consultation des infos de la file de message.\n");
-      perror("erreur: ");
-      exit(-1);
-    }
-    tablongueur_fm[i]=info->msg_qnum; /* Nombre de message dans la file */
-  }
-  tmp=tablongueur_fm[0];
+  
   fclose(fich_cle);
-  /* On cherche quel archiviste a le moins de message dans sa file */
+  /* On cherche quel archiviste a le moins de message dans sa file avec les semaphores */
+  
   /* Et on met son numéro dans nbarchiv_a_appeler                  */
-  for (i=1; i<nb_archiviste; i++){
-    if (tablongueur_fm[i]<tmp){
-      tmp=tablongueur_fm[i];
-      nbarchiv_a_appeler=i;
-    }
-  }
-
-  message.msg_type=1;
+  
+  message.msg_type=1; //1>nbarchiv_a_appeler
   message.operation=operation;
   message.num_journaliste=numjournaliste;
   
@@ -93,17 +73,17 @@ int main (int argc, char *argv[]){
     strcpy(message.msg_text,argv[4]);
     break;
   }
-  if (msgsnd(tabid_fm[nbarchiv_a_appeler],&message,10,IPC_NOWAIT)==-1){
+  if (msgsnd(id_filemessage,&message,nbarchiv_a_appeler,IPC_NOWAIT)==-1){
     fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",nbarchiv_a_appeler);
     perror("erreur: ");
   }
 
   /* On attend le message à recevoir */
-  
+  //while(1)
+    //  msgrcv
+    //  break; 
   /* On supprime tous les IPC */
   
   msgctl(id_filemessage,IPC_RMID,NULL);
-  
-  for (i=0; i<nb_archiviste; i++)
-    msgctl(tabid_fm[i],IPC_RMID,NULL);
+  //ctl des semaphores
 }

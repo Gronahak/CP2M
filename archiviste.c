@@ -52,38 +52,40 @@ int main (int argc, char *argv[]){
   /* On recupere les semaphores */
   fgets(id_lu,50,fich_cle);
   //a faire
-        
-  /* Lancement des segments de mémoire partagée de chaque thème */
-  fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
+
+  fgets(id_lu,50,fich_cle); //2e a incrementer suivant le msgrcv
   
-  for (i=0; i<nb_themes; i++){
-    fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
+  /* Recuperation de la file de message */
+
+  fgets(id_lu,50,fich_cle);
+  clef_filemessage=atoi(id_lu);
+  if ((id_filemessage=msgget(clef_filemessage,0660))==-1){
+    fprintf(stderr,"Probleme dans la recuperation de la file de message chez l'archiviste n°%d.\n",numero_ordre);
+    exit(-1);
+  }
+  
+  /* Récuperation des segments de mémoire partagée de chaque thème */
+  i=0;
+  while (fgets(id_lu,50,fich_cle)){ // On passe tous les id des shm des themes
     tabclef_shm[i]=atoi(id_lu);
+    i++;
     fprintf(stdout,"test de connard %d\n",tabclef_shm[i]);
     if ((tabid_shm[i]=shmget(tabclef_shm[i],NB_MAX_ARTICLES*4, 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
       fprintf(stderr,"Probleme dans la recuperation du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
       perror("erreur: ");
       exit(-1);
     }
-    
-  }
+  }    
+
   
-  /* Recuperation file de message de l'archiviste */
-  
-  for(i=1; i<=numero_ordre;i++)
-    fgets(id_lu,50,fich_cle);
-  clef_filemessage=atoi(id_lu);
-  if ((id_filemessage=msgget(clef_filemessage,0660))==-1){
-    fprintf(stderr,"Probleme dans la recuperation de la file de message de l'archiviste n°%d.\n",numero_ordre);
-    exit(-1);
-  }
   fclose(fich_cle);
+
   
   /* Traitement des messages */
   while(1){
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
-    id_message=msgrcv(id_filemessage,&message,sizeof(struct tampon),1,MSG_NOERROR);
+    id_message=msgrcv(id_filemessage,&message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
     *contenu=shmat(tabid_shm[message.theme],NULL,0);
     strcpy(tmp,message.msg_text);
     clef_journa=ftok("journaliste.c",message.num_journaliste);
@@ -110,7 +112,7 @@ int main (int argc, char *argv[]){
     }
     /* On previent le journaliste de l'action */
     if (msgsnd(clef_journa,&messageenvoi,10,IPC_NOWAIT)==-1)
-       exit(-1);
+      exit(-1);
    
     msgctl(id_journa,IPC_RMID,NULL);
     

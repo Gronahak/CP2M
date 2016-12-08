@@ -15,6 +15,6 @@ journaliste.o : journaliste.c types.h
 
 
 clean:
-	rm *.o organeDePresse journaliste archiviste 
+	rm *.o organeDePresse journaliste archiviste *.serv
 
 
