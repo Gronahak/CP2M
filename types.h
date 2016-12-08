@@ -15,6 +15,10 @@
 
 #define LETTRE_CODE 'a'
 
+#define EFFACEMENT 'e'
+#define PUBLICATION 'p'
+#define CONSULTATION 'c'
+
 struct tampon{
   long msg_type;
   char msg_text[4];
