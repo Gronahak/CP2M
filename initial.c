@@ -12,6 +12,8 @@ void arret_brutal(int s){
     }
   fgets(id_lu,50,fich_cle);
   id_sem=atoi(id_lu);
+  printf("<<<%s\n",id_lu);
+  printf(">>%d\n",id_sem);
   if ((id_sem=semget(id_sem,0,0))==-1){
     printf("recup impossible\n");
     perror("ohnon");
@@ -22,6 +24,7 @@ void arret_brutal(int s){
     exit (-1);
   }
   printf("Coup de balai fini\n");
+  exit(1);
   
 }
 void mon_sigaction(int signal, void(*f)(int)){
@@ -37,9 +40,11 @@ void usage(const char* chaine){
 }
 
 int main (int argc, char *argv[]){
-    mon_sigaction(SIGINT,arret_brutal);
 
-    // pause();
+  srand(getpid());
+  mon_sigaction(SIGINT,arret_brutal);
+  
+  // pause();
   if (argc!=3){
     usage(argv[0]);
   }
@@ -50,9 +55,13 @@ int main (int argc, char *argv[]){
   char cle_sem_chaine[100]={'\0'};
 
 
-  int id_mutex_redacteurs;
+  int id_ens_sem_redacteurs_prio;
+  struct sembuf V={0,+1,SEM_UNDO};    
 
-  
+  int i;
+  pid_t p;
+
+  int rand_requete,categorie_requete;
   /**********************************************************************/
   /*                                                                    */
   /*                                                                    */
@@ -96,16 +105,97 @@ int main (int argc, char *argv[]){
   /*                                                                    */
   /*                                                                    */
   /**********************************************************************/
-  
-   if ((id_mutex_redacteurs=semget(cle_smp,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
+
+    /* 1- Creation de l'ensemble de sémaphores qui contient 5 sémaphores : */
+    /*  × 0 mutex_redacteurs                                               */
+    /*  × 1 lecture                                                        */
+    /*  × 2 ecriture                                                       */
+    /*  × 3 avant                                                          */
+    /*  × 4 nombre                                                         */
+
+
+    if ((id_ens_sem_redacteurs_prio=semget(cle_smp,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
       printf("Echec creation mutex redacteurs\n");
       perror("mutex_redacteurs fail");
     }
-  
-  
+    perror("1");
 
-   pause();
+
+    printf("gneeee %d\n",semop(id_ens_sem_redacteurs_prio,&V,1));
+    perror("1");
+    /*
+    semop(id_ens_sem_redacteurs_prio,&V,2);
+    perror("2");
+    semop(id_ens_sem_redacteurs_prio,&V,3);
+    perror("3");
+    semop(id_ens_sem_redacteurs_prio,&V,4);
+    perror("4");
+    semop(id_ens_sem_redacteurs_prio,&V,0);
+    perror("5");
+    */
+            printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
+    fclose(fich_cle);
+
+
+
+    /**********************************************************************/
+    /*                                                                    */
+    /*                                                                    */
+    /*                   Creation des Archivistes                         */
+    /*                                                                    */
+    /*                                                                    */
+    /*                                                                    */
+    /**********************************************************************/
+
   
-  return 0;
+    
+    fprintf(stderr,"Création des archivistes");
+    for(i=1;i<=nb_archivistes;i++){
+      fprintf(stderr,".");
+      if ((p=fork())==-1){
+	printf("Echec du fork\n");
+	exit(-1);
+      }
+      else if (p==0){ /* Code du fils */
+	char * argexecve[]={NULL,NULL,NULL,NULL};
+	argexecve[0]="archiviste";
+	argexecve[2]=strdup(argv[2]);
+	char arg2[3]={'\0'};
+	    
+	sprintf(arg2,"%d",i);
+	argexecve[1]=arg2;
+	execve("./archiviste",argexecve,NULL);
+	exit(-1);
+      }
+    }
+ 
+    /**********************************************************************/
+    /*                                                                    */
+    /*                                                                    */
+    /*                   Creation des Journalistes                        */
+    /*                                                                    */
+    /*                                                                    */
+    /*                                                                    */
+    /**********************************************************************/
+    
+
+    while (1){
+      sleep(1);
+      printf("Création d'un journaliste\n");
+      rand_requete=rand()%10+1;
+      
+    if (rand_requete>1)
+      categorie_requete=PUBLICATION;
+    if (rand_requete>3)
+      categorie_requete=CONSULTATION;
+    if (rand_requete==1)
+      categorie_requete=EFFACEMENT;
+
+    printf("dont la catégorie est: %c\n",categorie_requete);
+    
+}
+    pause();
+    
+    return 0;
 
 }
