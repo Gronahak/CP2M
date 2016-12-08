@@ -13,14 +13,6 @@ int tabid_shm[100];
 int id_filemessage;
 
 void handler1(int signum){
-  int i;
-  fprintf(stdout," \n Arret brutal:\n SIGINT reçu, l'archiviste %d s'arrête et détruit les IPC.\n",numero_ordre);
-  /* On supprime les SHM */
-  for (i=0; i<nb_themes; i++){
-    shmctl(tabid_shm[i],IPC_RMID,NULL);
-  }
-  /* On supprime la file de message*/
-  msgctl(id_filemessage,IPC_RMID,NULL);
   exit(-1);
 }
 
@@ -36,9 +28,8 @@ int main (int argc, char *argv[]){
   struct sigaction new;
   sigset_t ens,ensvide;
   char* contenu[4],tmp[4];
-  char clef_filemess[50];
   FILE * fich_cle;
-  char id_lu[100];
+  char id_lu[50];
   nb_themes=atoi(argv[2]);
   numero_ordre=atoi(argv[1]);
   fprintf(stderr,"test nbtheme %d num ordre %d\n",nb_themes,numero_ordre);
@@ -70,23 +61,22 @@ int main (int argc, char *argv[]){
     tabclef_shm[i]=atoi(id_lu);
     fprintf(stdout,"test de connard %d\n",tabclef_shm[i]);
     if ((tabid_shm[i]=shmget(tabclef_shm[i],NB_MAX_ARTICLES*4, 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
-      fprintf(stderr,"Probleme dans la création du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
+      fprintf(stderr,"Probleme dans la recuperation du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
       perror("erreur: ");
       exit(-1);
     }
     
   }
   
-  /* Lancement file de message de l'archiviste */
+  /* Recuperation file de message de l'archiviste */
   
-  clef_filemessage=ftok("archiviste.c",numero_ordre);
-  if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
-    fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",numero_ordre);
+  for(i=1; i<=numero_ordre;i++)
+    fgets(id_lu,50,fich_cle);
+  clef_filemessage=atoi(id_lu);
+  if ((id_filemessage=msgget(clef_filemessage,0660))==-1){
+    fprintf(stderr,"Probleme dans la recuperation de la file de message de l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
   }
-
-  sprintf(clef_filemess,"%d",clef_filemessage);
-  fputs(clef_filemess,fich_cle);
   fclose(fich_cle);
   
   /* Traitement des messages */

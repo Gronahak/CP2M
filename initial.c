@@ -55,7 +55,7 @@ void arret_brutal(int s){
   printf("\n");
   //  animation_coup_de_balai();
   FILE *fich_cle;
-  char id_lu[28];
+  char clef_lu[50];
   int id_sem;
   printf("Coup de balai dans les IPC.\n");
   
@@ -64,39 +64,47 @@ void arret_brutal(int s){
     printf("fich inexistant\n");
     exit(-1);
     }
-  fgets(id_lu,50,fich_cle);
-  id_sem=atoi(id_lu);
-  printf("<<<%s\n",id_lu);
+  fgets(clef_lu,50,fich_cle);
+  id_sem=atoi(clef_lu);
+  printf("<<<%s\n",clef_lu);
   printf(">>%d\n",id_sem);
   if ((id_sem=semget(id_sem,0,0))==-1){
     printf("recup impossible\n");
     perror("ohnon");
   }
-  if (semctl(id_sem,0,IPC_RMID)==-1){
+  if (semctl(id_sem,IPC_RMID,0)==-1){
     printf("Destruction de l'ensemble de semaphores impossible\n");
     perror("wtf;");
     exit (-1);
   }
   
-  fgets(id_lu,50,fich_cle);
-
-  int nb_th;
-  nb_th=atoi(id_lu);
+  fgets(clef_lu,50,fich_cle);
+  
+  int nb_th,id_shm;
+  nb_th=atoi(clef_lu);
   for (i=0;i<nb_th;i++){
-    fgets(id_lu,50,fich_cle);
-      printf("<<<<<<<%s\n",id_lu);
+    fgets(clef_lu,50,fich_cle);
+    printf("<<<<<<<%s\n",clef_lu);
 
-    id_sem=atoi(id_lu);
-    if ((id_sem=shmget(id_sem,0,0))==-1){
+
+    id_shm=atoi(clef_lu);
+    if ((id_shm=shmget(id_shm,0,0))==-1){
       printf("recup impossible\n");
       perror("ohnon");
     }
-    if (shmctl(id_sem,0,IPC_RMID)==-1){
-      printf("Destruction du segment de memoire impossible\n");
+    if (shmctl(id_shm,IPC_RMID,NULL)==-1){
+      printf("Destruction du shm impossible\n");
       perror("wtf;");
       exit (-1);
     }
   }
+
+  int id_fm;
+  while (fgets(clef_lu,50,fich_cle)){
+    id_fm=msgget(atoi(clef_lu),0660);
+    msgctl(id_fm,IPC_RMID,NULL);
+  }
+  
   printf("Coup de balai fini\n");
   fclose(fich_cle);
   exit(1);
@@ -135,8 +143,9 @@ int main (int argc, char *argv[]){
   key_t cle_smp;
   FILE *fich_cle;
   char cle_sem_chaine[100]={'\0'};
+  char clef_filemess[100]={'\0'};
   char nb_themes_chaine[5]={'\0'};
-
+  int clef_filemessage,id_filemessage;
   int id_ens_sem_redacteurs_prio;
   int id_ens_sem_files_archi;
   struct sembuf V={0,+1,SEM_UNDO};    
@@ -261,8 +270,6 @@ int main (int argc, char *argv[]){
 
 
     }
-    fclose(fich_cle);
-
 
     /**********************************************************************/
     /*                                                                    */
@@ -293,8 +300,21 @@ int main (int argc, char *argv[]){
 	execve("./archiviste",argexecve,NULL);
 	exit(-1);
       }
+        
+      clef_filemessage=ftok("archiviste.c",i); //i numero d'ordre
+      if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
+	fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",i);
+	exit(-1);
+      }
+
+      sprintf(clef_filemess,"%d",clef_filemessage);
+      fputs(clef_filemess,fich_cle);
+      sprintf(clef_filemess,"\n");
+      fputs(clef_filemess,fich_cle);
     }
- 
+
+    
+    fclose(fich_cle);
     /**********************************************************************/
     /*                                                                    */
     /*                                                                    */
