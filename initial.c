@@ -55,7 +55,7 @@ void arret_brutal(int s){
   printf("\n");
   animation_coup_de_balai();
   FILE *fich_cle;
-  char id_lu[28];
+  char id_lu[50];
   int id_sem;
   printf("Coup de balai dans les IPC.\n");
   
@@ -78,6 +78,7 @@ void arret_brutal(int s){
     exit (-1);
   }
   printf("Coup de balai fini\n");
+  fclose(fich_cle);
   exit(1);
   
 }

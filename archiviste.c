@@ -36,7 +36,8 @@ int main (int argc, char *argv[]){
   struct sigaction new;
   sigset_t ens,ensvide;
   char* contenu[4],tmp[4];
-  
+  char clef_filemess[50];
+  FILE * fich_cle;
   nb_themes=atoi(argv[2]);
   numero_ordre=atoi(argv[1]);
   
@@ -51,8 +52,15 @@ int main (int argc, char *argv[]){
   sigaction(SIGINT,&new,NULL);
   
   /* Lancement des segments de mémoire partagée de chaque thème */
+  
+    fich_cle = fopen(FICHIER_CLE,"r");
+    if (fich_cle==NULL){
+      printf("Lancement serveur impossible\n");
+      exit(-1);
+    }
+    
   for (i=0; i<nb_themes; i++){
-    tabclef_shm[i]=ftok("archiviste.c",i);
+    tabclef_shm[i]=ftok("initial.c",i);
     fprintf(stdout,"test de connard %d\n",tabclef_shm[i]);
     if ((tabid_shm[i]=shmget(tabclef_shm[i],50,IPC_CREAT | IPC_EXCL | 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
       fprintf(stderr,"Probleme dans la création du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
@@ -63,31 +71,41 @@ int main (int argc, char *argv[]){
   }
   
   /* Lancement file de message de l'archiviste */
+  
   clef_filemessage=ftok("archiviste.c",numero_ordre);
   if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
     fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
   }
 
+  sprintf(clef_filemess,"%d",clef_filemessage);
+  fputs(clef_filemess,fich_cle);
+  fclose(fich_cle);
+  
+  /* Lancement des sémaphores */
+
+
+  
   /* Traitement des messages */
   while(1){
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
     id_message=msgrcv(id_filemessage,&message,1000,1,MSG_NOERROR);
     *contenu=shmat(tabid_shm[message.theme],NULL,0);
-      strcpy(tmp,message.msg_text);
+    strcpy(tmp,message.msg_text);
+    /* /!\ Ouvrir la file de message du jouraliste pour lui envoyer un message */ 
     switch(message.operation){
-    case 'c': /* consulter l'article */
+    case CONSULTATION: /* consulter l'article */
       /* envoie un message avec le contenu */
       break;
-    case 'p': /* publier l'article */
+    case PUBLICATION: /* publier l'article */
       /* verif semaphore theme */
       strcat(*contenu,tmp);
       fprintf(stdout,"Article publié MAGUEULE\n");
       break;
-    case 'e': /* supprimer l'article */
+    case EFFACEMENT: /* supprimer l'article */
       /* verif semaphore theme */
-      *contenu=strtok(*contenu,tmp);
+      *contenu=strtok(*contenu,tmp);//NON
       fprintf(stdout,"Article supprimé BOYAH\n");
       break;
     }
@@ -95,7 +113,8 @@ int main (int argc, char *argv[]){
     shmdt(&id_message);
   }
 
-
+  /* On supprime les sémaphores */
+  
   /* On supprime les SHM */
   for (i=0; i<nb_themes; i++){
     shmctl(tabid_shm[i],IPC_RMID,NULL);
