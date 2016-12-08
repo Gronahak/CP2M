@@ -15,15 +15,15 @@
 
 int main (int argc, char *argv[]){
 
-  int i, clef_filemessage,id_filemessage;
-  int nb_archiviste=atoi(argv[1]);
+  int  clef_filemessage,id_filemessage;
+  // int nb_archiviste=atoi(argv[1]);
   char operation=argv[2][0];
   int numjournaliste=getpid(); // Ou un param ?
   int nbarchiv_a_appeler=0;
-  int tmp;
-  struct msqid_ds * info=(struct msqid_ds*)malloc(sizeof(struct msqid_ds));
+  // int tmp;
+  // struct msqid_ds * info=(struct msqid_ds*)malloc(sizeof(struct msqid_ds));
   struct tampon message;
-  char * erreur;
+  //  char * erreur;
   FILE *fich_cle;
   char id_lu[100];
   fich_cle = fopen(FICHIER_CLE,"r");
@@ -33,15 +33,18 @@ int main (int argc, char *argv[]){
   }
   
 
-  erreur=fgets(id_lu,50,fich_cle); //semaphores1 inutiles ici
+  //  erreur=
+    fgets(id_lu,50,fich_cle); //semaphores1 inutiles ici
 
   /* On recupere l'ensemble 2 de semaphore */
   
-  erreur=fgets(id_lu,50,fich_cle); // semaphore2 a traiter
+    //  erreur=
+    fgets(id_lu,50,fich_cle); // semaphore2 a traiter
 
   /*Lancement file de message */
       
-  erreur=fgets(id_lu,50,fich_cle); // archiviste
+    //  erreur=
+    fgets(id_lu,50,fich_cle); // archiviste
   clef_filemessage=atoi(id_lu);
 
   if ((id_filemessage=msgget(clef_filemessage,0660))==-1){ 

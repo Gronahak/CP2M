@@ -1,57 +1,41 @@
 #include "types.h"
 
-void animation_coup_de_balai(){
+void animation_coup_de_balai(){ /* Afficher le coup de balai (fonction purement cosmétique) */
   int i=0;
   int k=0;
   fflush(stdout);
   printf("\x1b[32m\n");
-
   struct timespec tim;
-   tim.tv_sec=0;
+  tim.tv_sec=0;
   tim.tv_nsec=150000000;
-  
-     for (k=0;k<=28;k++){
-       
-      printf(".");  fflush(stdout);
-     }
-     printf(" \b");
-  while(i<28){
-  printf("\b");  fflush(stdout);
-  printf("\b");  fflush(stdout);
-  printf("\b");  fflush(stdout);
-
-    //    for (k=0;k<i;k++){
-      printf(" ");  fflush(stdout);
-      //}
-    //   printf("\e[1m");
-    // printf("\e[31");
-  printf("/");
-  fflush(stdout);
-
-  nanosleep(&tim,NULL);
-  printf("\b");  fflush(stdout);
-  //  for (k=0;k<i;k++) {printf("\b");  fflush(stdout);}
-  fflush(stdout);
-  nanosleep(&tim,NULL);
-  
-  printf("\\");
-  fflush(stdout);
-  nanosleep(&tim,NULL);
-  printf("\b");  fflush(stdout);
-      printf(" ");  fflush(stdout);
-  
-  //      for (k=0;k<i;k++)
-  //	printf("\b");
-  fflush(stdout);
-  i++;
+  for (k=0;k<=28;k++){     
+    printf(".");  fflush(stdout);
   }
-  //  printf("\e[0m");
-    printf("\033[0m\n");
-
+  printf(" \b");
+  while(i<28){
+    printf("\b");  fflush(stdout);
+    printf("\b");  fflush(stdout);
+    printf("\b");  fflush(stdout);
+    printf(" ");  fflush(stdout);
+    printf("/");
+    fflush(stdout);
+    nanosleep(&tim,NULL);
+    printf("\b");  fflush(stdout);
+    fflush(stdout);
+    nanosleep(&tim,NULL);  
+    printf("\\");
+    fflush(stdout);
+    nanosleep(&tim,NULL);
+    printf("\b");  fflush(stdout);
+    printf(" ");  fflush(stdout);
+    fflush(stdout);
+    i++;
+  }
+  printf("\033[0m\n");
 }
 
 void arret_brutal(int s){
-  int i;
+  //  int i;
   printf("\n");
   //animation_coup_de_balai();
   FILE *fich_cle;
@@ -63,7 +47,7 @@ void arret_brutal(int s){
   if (fich_cle==NULL){
     printf("fich inexistant\n");
     exit(-1);
-    }
+  }
   fgets(clef_lu,50,fich_cle);
   id_sem=atoi(clef_lu);
   printf("<<<%s\n",clef_lu);
@@ -94,7 +78,7 @@ void arret_brutal(int s){
 
   int id_fm;
   fgets(clef_lu,50,fich_cle);
-  id_fm=msgget(atoi(clef_lu),0660);
+  id_fm=msgget(atoi(clef_lu),0);
   msgctl(id_fm,IPC_RMID,NULL);
   
   
@@ -155,11 +139,11 @@ int main (int argc, char *argv[]){
   FILE *fich_cle;
   char cle_sem_chaine[100]={'\0'};
   char clef_filemess[100]={'\0'};
-  char nb_themes_chaine[5]={'\0'};
+  //  char nb_themes_chaine[5]={'\0'};
   int clef_filemessage,id_filemessage;
   int id_ens_sem_redacteurs_prio;
   int id_ens_sem_files_archi;
-  struct sembuf V={0,+1,SEM_UNDO};    
+  //  struct sembuf V={0,+1,SEM_UNDO};    
 
   int id_smp;
   
@@ -244,7 +228,7 @@ int main (int argc, char *argv[]){
       semop(id_ens_sem_redacteurs_prio,&V,0);
       perror("5");
     */
-    printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
+    //  printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
 
 
 
@@ -267,7 +251,7 @@ int main (int argc, char *argv[]){
     /* 3- Creation de la file de message                                    */
     clef_filemessage=ftok("archiviste.c",10);
     if ((id_filemessage=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
-      fprintf(stderr,"Probleme dans la création de la file de message de l'archiviste n°%d.\n",i);
+      fprintf(stderr,"Probleme dans la création de la file de message.\n");
       exit(-1);
     }
 
@@ -394,7 +378,7 @@ int main (int argc, char *argv[]){
 	  
 	  
 	}
-	  //	execve("./journaliste",argexecve,NULL);
+	  	execve("./journaliste",argexecve,NULL);
 	exit(-1);
       }
 }
