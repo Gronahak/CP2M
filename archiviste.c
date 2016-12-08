@@ -40,7 +40,7 @@ int main (int argc, char *argv[]){
   FILE * fich_cle;
   nb_themes=atoi(argv[2]);
   numero_ordre=atoi(argv[1]);
-  
+  fprintf(stderr,"test nbtheme %d num ordre %d\n",nb_themes,numero_ordre);
   /* Captage des signaux qui stoppent l'archiviste */
 
   new.sa_handler=handler1;
