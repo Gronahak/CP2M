@@ -79,10 +79,13 @@ void arret_brutal(int s){
   }
   
   fgets(id_lu,50,fich_cle);
+
   int nb_th;
   nb_th=atoi(id_lu);
   for (i=0;i<nb_th;i++){
     fgets(id_lu,50,fich_cle);
+      printf("<<<<<<<%s\n",id_lu);
+
     id_sem=atoi(id_lu);
     if ((id_sem=semget(id_sem,0,0))==-1){
       printf("recup impossible\n");
