@@ -87,12 +87,12 @@ void arret_brutal(int s){
       printf("<<<<<<<%s\n",id_lu);
 
     id_sem=atoi(id_lu);
-    if ((id_sem=semget(id_sem,0,0))==-1){
+    if ((id_sem=shmget(id_sem,0,0))==-1){
       printf("recup impossible\n");
       perror("ohnon");
     }
-    if (semctl(id_sem,0,IPC_RMID)==-1){
-      printf("Destruction de l'ensemble de semaphores impossible\n");
+    if (shmctl(id_sem,0,IPC_RMID)==-1){
+      printf("Destruction du segment de memoire impossible\n");
       perror("wtf;");
       exit (-1);
     }
@@ -111,7 +111,8 @@ void mon_sigaction(int signal, void(*f)(int)){
 }
 
 void usage(const char* chaine){
-  printf("Usage : %s <nb_archivistes> <nb_themes>\n",chaine);
+  printf("Usage : %s <nb_archivistes> <nb_themes>\n\t les deux paramètres doivent être >= 2\n",chaine);
+
 }
 
 int main (int argc, char *argv[]){
@@ -122,9 +123,14 @@ int main (int argc, char *argv[]){
   // pause();
   if (argc!=3){
     usage(argv[0]);
+    exit(-1);
   }
   int nb_archivistes=atoi(argv[1]);
   int nb_themes=atoi(argv[2]);
+  if (nb_archivistes<2||nb_themes<2){
+    usage(argv[0]);
+    exit(-1);
+  }
   key_t cle_sem;
   key_t cle_smp;
   FILE *fich_cle;
@@ -132,6 +138,7 @@ int main (int argc, char *argv[]){
   char nb_themes_chaine[5]={'\0'};
 
   int id_ens_sem_redacteurs_prio;
+  int id_ens_sem_files_archi;
   struct sembuf V={0,+1,SEM_UNDO};    
 
   int id_smp;
@@ -194,32 +201,52 @@ int main (int argc, char *argv[]){
     /*  × 2 ecriture                                                       */
     /*  × 3 avant                                                          */
     /*  × 4 nombre                                                         */
+    /* Cet ensemble de sémaphores sert à réglementer le protocole lecteur  */
+    /* rédacteurs avec priorité aux rédacteurs                             */
 
 
     if ((id_ens_sem_redacteurs_prio=semget(cle_sem,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
-      printf("Echec creation mutex redacteurs\n");
-      perror("mutex_redacteurs fail");
+      printf("Echec creation ES redacteurs prio\n");
+      perror("ES redacteurs_prio fail");
     }
-    perror("1");
+    //    perror("1");
 
 
-    printf("gneeee %d\n",semop(id_ens_sem_redacteurs_prio,&V,1));
-    perror("1");
+    //    printf("gneeee %d\n",semop(id_ens_sem_redacteurs_prio,&V,1));
+    //    perror("1");
     /*
-    semop(id_ens_sem_redacteurs_prio,&V,2);
-    perror("2");
-    semop(id_ens_sem_redacteurs_prio,&V,3);
-    perror("3");
-    semop(id_ens_sem_redacteurs_prio,&V,4);
-    perror("4");
-    semop(id_ens_sem_redacteurs_prio,&V,0);
-    perror("5");
+      semop(id_ens_sem_redacteurs_prio,&V,2);
+      perror("2");
+      semop(id_ens_sem_redacteurs_prio,&V,3);
+      perror("3");
+      semop(id_ens_sem_redacteurs_prio,&V,4);
+      perror("4");
+      semop(id_ens_sem_redacteurs_prio,&V,0);
+      perror("5");
     */
-            printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
+    printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
 
-    /* 2- Creation des segments de memoire partagée (1 par thème)      : */
+
+
+
+    /* 2- Creation de l'ensemble de sémaphores qui contient                */
+    /*  nb_archivistes sémaphores                                          */
+    /* Cet ensemble de sémaphores sert à connaitre en temps réel quel est  */
+    /* l'archiviste le moins occupé                                        */
+
+    cle_sem = ftok(FICHIER_CLE,LETTRE_CODE+1);
+    sprintf(cle_sem_chaine,"%d",cle_sem);
+    fputs(cle_sem_chaine,fich_cle);
+    if ((id_ens_sem_files_archi=semget(cle_sem,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
+      printf("Echec creation ES file_archi\n");
+      perror("ES file_archi fail");
+    }
+
+
+	    
+    /* 3- Creation des segments de memoire partagée (1 par thème)      : */
     for (i=0;i<nb_themes;i++){
-      cle_smp=ftok(FICHIER_CLE,'a'+i+1);
+      cle_smp=ftok(FICHIER_CLE,'a'+i+2);
       char cle_smp_chaine[50]={'\0'};
       if ((id_smp=shmget(cle_smp,NB_MAX_ARTICLES*4,IPC_CREAT|IPC_EXCL|0666))==-1)
       {
@@ -290,7 +317,56 @@ int main (int argc, char *argv[]){
 	categorie_requete=CONSULTATION;
 
       printf("dont la catégorie est: %c||%d\n",categorie_requete,rand_requete);
-    
+
+
+
+      if ((p=fork())==-1){
+	printf("Echec du fork\n");
+	exit(-1);
+      }
+      else if (p==0){ /* Code du fils */
+	char * argexecve[]={NULL,NULL,NULL,NULL,NULL,NULL};
+	argexecve[0]="journaliste";
+	argexecve[1]=strdup(argv[1]);
+	char arg2[2]={'\0'};
+	arg2[0]=categorie_requete;
+      	argexecve[2]=arg2;
+	int theme;
+	theme=rand()%nb_themes;
+	char arg3[2]={'\0'};
+	arg3[0]=theme;
+	argexecve[3]=arg3;
+
+	int numero_article;
+
+	char article[5];
+	  switch (categorie_requete){
+	case CONSULTATION:
+	case EFFACEMENT:
+
+	  numero_article=rand()%NB_MAX_ARTICLES;
+	  sprintf(article,"%d",numero_article);
+	  argexecve[4]=article;
+	  break;
+	case PUBLICATION:
+
+
+	  article[0]='A'+rand()%26;
+	  article[1]='a'+rand()%26;
+	  article[2]='a'+rand()%26;
+	  article[3]='a'+rand()%26;
+	  article[4]='\0';
+
+	  
+	  argexecve[4]=article;
+	  
+	  break;
+	  
+	  
+	}
+	execve("./journaliste",argexecve,NULL);
+	exit(-1);
+      }
 }
     pause();
     
