@@ -41,10 +41,15 @@ int main (int argc, char *argv[]){
   }
 
   /*Lancement files de message des archivistes */
+
+  erreur=fgets(id_lu,50,fich_cle); //semaphores inutiles ici
+  erreur=fgets(id_lu,50,fich_cle); // nombre de themes
+  for(i=0; i<atoi(id_lu);i++)
+    erreur=fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
+      if (1==2) return fprintf(stderr,"%s LOL",erreur);
+      
   for (i=0; i<nb_archiviste; i++){
-    erreur=fgets(id_lu,50,fich_cle); //semaphores inutiles ici
-    erreur=fgets(id_lu,50,fich_cle);
-    if (1==2) return fprintf(stderr,"%s LOL",erreur);
+    erreur=fgets(id_lu,50,fich_cle); // archiviste
     tabclef_fm[i]=atoi(id_lu);
     fprintf(stdout,"test de connard %d\n",tabclef_fm[i]);
     if ((tabid_fm[i]=msgget(tabclef_fm[i],IPC_CREAT | IPC_EXCL | 0660))==-1){ 
@@ -92,6 +97,8 @@ int main (int argc, char *argv[]){
     fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",nbarchiv_a_appeler);
     perror("erreur: ");
   }
+
+  /* On attend le message à recevoir */
   
   /* On supprime tous les IPC */
   

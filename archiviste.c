@@ -31,13 +31,14 @@ void handler1(int signum){
 
 int main (int argc, char *argv[]){
 
-  int i, clef_filemessage,id_message;
-  struct tampon message;
+  int i, clef_filemessage,id_message, clef_journa,id_journa;
+  struct tampon message,messageenvoi;
   struct sigaction new;
   sigset_t ens,ensvide;
   char* contenu[4],tmp[4];
   char clef_filemess[50];
   FILE * fich_cle;
+  char id_lu[100];
   nb_themes=atoi(argv[2]);
   numero_ordre=atoi(argv[1]);
   fprintf(stderr,"test nbtheme %d num ordre %d\n",nb_themes,numero_ordre);
@@ -50,17 +51,23 @@ int main (int argc, char *argv[]){
   sigemptyset(&ensvide);
   sigaddset(&ens,SIGUSR1);
   sigaction(SIGINT,&new,NULL);
-  
+
+  fich_cle = fopen(FICHIER_CLE,"r");
+  if (fich_cle==NULL){
+    printf("Lancement serveur impossible\n");
+    exit(-1);
+  }
+
+  /* On recupere les semaphores */
+  fgets(id_lu,50,fich_cle);
+  //a faire
+        
   /* Lancement des segments de mémoire partagée de chaque thème */
+  fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
   
-    fich_cle = fopen(FICHIER_CLE,"r");
-    if (fich_cle==NULL){
-      printf("Lancement serveur impossible\n");
-      exit(-1);
-    }
-    
   for (i=0; i<nb_themes; i++){
-    tabclef_shm[i]=ftok("initial.c",i);
+    fgets(id_lu,50,fich_cle); // On passe tous les id des shm des themes
+    tabclef_shm[i]=atoi(id_lu);
     fprintf(stdout,"test de connard %d\n",tabclef_shm[i]);
     if ((tabid_shm[i]=shmget(tabclef_shm[i],50,IPC_CREAT | IPC_EXCL | 0660))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
       fprintf(stderr,"Probleme dans la création du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
@@ -82,17 +89,19 @@ int main (int argc, char *argv[]){
   fputs(clef_filemess,fich_cle);
   fclose(fich_cle);
   
-  /* Lancement des sémaphores */
-
-
-  
   /* Traitement des messages */
   while(1){
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
-    id_message=msgrcv(id_filemessage,&message,1000,1,MSG_NOERROR);
+    id_message=msgrcv(id_filemessage,&message,sizeof(struct tampon),1,MSG_NOERROR);
     *contenu=shmat(tabid_shm[message.theme],NULL,0);
     strcpy(tmp,message.msg_text);
+    clef_journa=ftok("journaliste.c",message.num_journaliste);
+    if ((id_journa=msgget(clef_filemessage,IPC_CREAT | IPC_EXCL | 0660))==-1){
+      fprintf(stderr,"Probleme dans la recuperation de la file de message du journaliste n°%d.\n",message.num_journaliste);
+      exit(-1);
+    }
+
     /* /!\ Ouvrir la file de message du jouraliste pour lui envoyer un message */ 
     switch(message.operation){
     case CONSULTATION: /* consulter l'article */
@@ -109,7 +118,12 @@ int main (int argc, char *argv[]){
       fprintf(stdout,"Article supprimé BOYAH\n");
       break;
     }
-    // de-shmat a faire
+    /* On previent le journaliste de l'action */
+    if (msgsnd(clef_journa,&messageenvoi,10,IPC_NOWAIT)==-1)
+       exit(-1);
+   
+    msgctl(id_journa,IPC_RMID,NULL);
+    
     shmdt(&id_message);
   }
 

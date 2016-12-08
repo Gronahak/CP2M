@@ -10,15 +10,10 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
-#include <time.h>
 
 #define FICHIER_CLE "cle.serv"
 
 #define LETTRE_CODE 'a'
-
-#define CONSULTATION 'c'
-#define PUBLICATION 'p'
-#define EFFACEMENT 'e'
 
 struct tampon{
   long msg_type;
