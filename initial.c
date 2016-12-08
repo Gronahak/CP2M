@@ -276,6 +276,7 @@ int main (int argc, char *argv[]){
     fputc('\n',fich_cle);
     
     /* 4- Creation des segments de memoire partagée (1 par thème)      : */
+    fprintf(stdout," nb themes: %d\n",nb_themes);
     for (i=0;i<nb_themes;i++){
       cle_smp=ftok(FICHIER_CLE,'a'+i+2);
       char cle_smp_chaine[50]={'\0'};
@@ -288,7 +289,6 @@ int main (int argc, char *argv[]){
       sprintf(cle_smp_chaine,"%d",cle_smp);
       fputs(cle_smp_chaine,fich_cle);
       fputc('\n',fich_cle);
-
     }
 
     
