@@ -15,6 +15,9 @@
 
 #define LETTRE_CODE 'a'
 
+#define CONSULTATION 'c'
+#define PUBLICATION 'p'
+#define EFFACEMENT 'e'
 
 struct tampon{
   long msg_type;
