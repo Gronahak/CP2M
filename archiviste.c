@@ -10,9 +10,15 @@ int nb_themes;
 int numero_ordre;
 int tabclef_shm[100];
 int tabid_shm[100];
+int nb_shm;
 int id_filemessage;
 
 void handler1(int signum){
+  int i;
+  for(i=0;i<nb_shm;i++){
+    shmctl(tabclef_shm[i],IPC_RMID,NULL);
+    printf("EH\n");
+  }
   exit(-1);
 }
 
@@ -59,25 +65,23 @@ int main (int argc, char *argv[]){
 
   fgets(id_lu,50,fich_cle);
   clef_filemessage=atoi(id_lu);
-  if ((id_filemessage=msgget(clef_filemessage,0660))==-1){
+  if ((id_filemessage=msgget(clef_filemessage,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation de la file de message chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
   }
-  printf("J'ai récupéré ta pile CONNARD ! \n");
   /* Récuperation des segments de mémoire partagée de chaque thème */
   i=0;
   while (fgets(id_lu,50,fich_cle)){ // On passe tous les id des shm des themes
     tabclef_shm[i]=atoi(id_lu);
-    fprintf(stdout,"test de connard %d %d %d\n",tabclef_shm[i],atoi(id_lu),i);
-        i++;
-    if ((tabid_shm[i]=shmget(tabclef_shm[i],0, 0))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
+    //fprintf(stdout,"test de connard %d %d %d\n",tabclef_shm[i],atoi(id_lu),i);
+    if ((tabid_shm[i]=shmget(tabclef_shm[i],NB_MAX_ARTICLES*4,0))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
       fprintf(stderr,"Probleme dans la recuperation du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
       perror("erreur: ");
       exit(-1);
     }
-    printf("EH OUI SHM DE MORT !\n");
+           i++;
   }    
-
+  nb_shm=i;
   
   fclose(fich_cle);
 
