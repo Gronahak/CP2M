@@ -14,7 +14,7 @@ journaliste : journaliste.o types.h
 journaliste.o : journaliste.c types.h
 
 
-propre:
+clean:
 	rm *.o organeDePresse journaliste archiviste
 
 
