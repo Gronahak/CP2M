@@ -1,5 +1,59 @@
 #include "types.h"
+
+void animation_coup_de_balai(){
+  int i=0;
+  int k=0;
+  fflush(stdout);
+  printf("\x1b[32m\n");
+
+  struct timespec tim;
+  tim.tv_sec=0;
+  tim.tv_nsec=150000000;
+  time_t tv_sec;
+  
+     for (k=0;k<=28;k++){
+       
+      printf(".");  fflush(stdout);
+     }
+     printf(" \b");
+  while(i<28){
+  printf("\b");  fflush(stdout);
+  printf("\b");  fflush(stdout);
+  printf("\b");  fflush(stdout);
+
+    //    for (k=0;k<i;k++){
+      printf(" ");  fflush(stdout);
+      //}
+    //   printf("\e[1m");
+    // printf("\e[31");
+  printf("/");
+  fflush(stdout);
+
+  nanosleep(&tim,NULL);
+  printf("\b");  fflush(stdout);
+  //  for (k=0;k<i;k++) {printf("\b");  fflush(stdout);}
+  fflush(stdout);
+  nanosleep(&tim,NULL);
+  
+  printf("\\");
+  fflush(stdout);
+  nanosleep(&tim,NULL);
+  printf("\b");  fflush(stdout);
+      printf(" ");  fflush(stdout);
+  
+  //      for (k=0;k<i;k++)
+  //	printf("\b");
+  fflush(stdout);
+  i++;
+  }
+  //  printf("\e[0m");
+    printf("\033[0m\n");
+
+}
+
 void arret_brutal(int s){
+  printf("\n");
+  animation_coup_de_balai();
   FILE *fich_cle;
   char id_lu[28];
   int id_sem;
@@ -49,7 +103,7 @@ int main (int argc, char *argv[]){
     usage(argv[0]);
   }
   int nb_archivistes=atoi(argv[1]);
-  int nb_themes=atoi(argv[2]);
+  //int nb_themes=atoi(argv[2]); /* inutile , directement récupéré avec argv[2] lors de la création des archivistes */
   key_t cle_smp;
   FILE *fich_cle;
   char cle_sem_chaine[100]={'\0'};
@@ -183,15 +237,14 @@ int main (int argc, char *argv[]){
       sleep(1);
       printf("Création d'un journaliste\n");
       rand_requete=rand()%10+1;
-      
-    if (rand_requete>1)
-      categorie_requete=PUBLICATION;
-    if (rand_requete>3)
-      categorie_requete=CONSULTATION;
-    if (rand_requete==1)
-      categorie_requete=EFFACEMENT;
 
-    printf("dont la catégorie est: %c\n",categorie_requete);
+      categorie_requete=EFFACEMENT;
+      if (rand_requete>1)
+	categorie_requete=PUBLICATION;
+      if (rand_requete>3)
+	categorie_requete=CONSULTATION;
+
+      printf("dont la catégorie est: %c||%d\n",categorie_requete,rand_requete);
     
 }
     pause();
