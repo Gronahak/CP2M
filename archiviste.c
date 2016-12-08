@@ -14,7 +14,7 @@ int id_filemessage;
 
 void handler1(int signum){
   int i;
-  fprintf(stdout," SIGINT reçu, l'archiviste %d s'arrête et détruit les IPC.\n",numero_ordre);
+  fprintf(stdout," \n Arret brutal:\n SIGINT reçu, l'archiviste %d s'arrête et détruit les IPC.\n",numero_ordre);
   /* On supprime les SHM */
   for (i=0; i<nb_themes; i++){
     shmctl(tabid_shm[i],IPC_RMID,NULL);
@@ -33,17 +33,18 @@ int main (int argc, char *argv[]){
 
   int i, clef_filemessage,id_message;
   struct tampon message;
+  struct sigaction new;
+  sigset_t ens,ensvide;
+  char* contenu[4],tmp[4];
   
   nb_themes=atoi(argv[2]);
   numero_ordre=atoi(argv[1]);
   
   /* Captage des signaux qui stoppent l'archiviste */
 
-  struct sigaction new;
   new.sa_handler=handler1;
   new.sa_flags=0;
   sigemptyset(&new.sa_mask);
-  sigset_t ens,ensvide;
   sigemptyset(&ens);
   sigemptyset(&ensvide);
   sigaddset(&ens,SIGUSR1);
@@ -73,20 +74,28 @@ int main (int argc, char *argv[]){
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
     id_message=msgrcv(id_filemessage,&message,1000,1,MSG_NOERROR);
-    // shmat a faire 
+    *contenu=shmat(tabid_shm[message.theme],NULL,0);
+      strcpy(tmp,message.msg_text);
     switch(message.operation){
     case 'c': /* consulter l'article */
+      /* envoie un message avec le contenu */
       break;
     case 'p': /* publier l'article */
+      /* verif semaphore theme */
+      strcat(*contenu,tmp);
+      fprintf(stdout,"Article publié MAGUEULE\n");
       break;
     case 'e': /* supprimer l'article */
+      /* verif semaphore theme */
+      *contenu=strtok(*contenu,tmp);
+      fprintf(stdout,"Article supprimé BOYAH\n");
       break;
     }
     // de-shmat a faire
+    shmdt(&id_message);
   }
 
 
-  /* A faire en cas d'arret brutal */
   /* On supprime les SHM */
   for (i=0; i<nb_themes; i++){
     shmctl(tabid_shm[i],IPC_RMID,NULL);
