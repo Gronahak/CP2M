@@ -15,6 +15,7 @@
 #define FICHIER_CLE "cle.serv"
 
 #define LETTRE_CODE 'a'
+#define NB_MAX_ARTICLES 100
 
 #define CONSULTATION 'c'
 #define PUBLICATION 'p'
