@@ -45,7 +45,7 @@ int indice_tab_j=0;
 
 void arret_brutal(int s){
   int i;
-  int statut;
+  // int statut;
   /* Eradication des archivistes et journalistes qui se balladent :*/
   for (i=0;i<NB_MAX_JOURNALISTES;i++){
     if (tableau_pid_journalistes[i]!=0)  kill(tableau_pid_journalistes[i],SIGUSR1);
@@ -269,25 +269,6 @@ int main (int argc, char *argv[]){
     printf("Echec creation ES redacteurs prio\n");
     perror("ES redacteurs_prio fail");
   }
-  //    perror("1");
-
-
-  //    printf("gneeee %d\n",semop(id_ens_sem_redacteurs_prio,&V,1));
-  //    perror("1");
-  /*
-    semop(id_ens_sem_redacteurs_prio,&V,2);
-    perror("2");
-    semop(id_ens_sem_redacteurs_prio,&V,3);
-    perror("3");
-    semop(id_ens_sem_redacteurs_prio,&V,4);
-    perror("4");
-    semop(id_ens_sem_redacteurs_prio,&V,0);
-    perror("5");
-  */
-  //  printf("C'est la pause %d\n",semctl(id_ens_sem_redacteurs_prio,0,GETVAL));
-
-
-
 
   /* 2- Creation de l'ensemble de sémaphores qui contient                */
   /*  nb_archivistes + 1  sémaphores                                     */
@@ -309,36 +290,17 @@ int main (int argc, char *argv[]){
 
   /************* initialisation des Ensembles de sémaphores **************/
 
-  printf("DEBUUUUG1\n");
   ushort *tab;
   tab = (ushort*)malloc((4+nb_themes)*sizeof(ushort));
   if (tab==NULL){printf("Y'a plus de memoiren abandonnez le navire.\n") ;exit(-1);}
   for (i=0;i<4+nb_themes;i++)tab[i]=1;
   ushort tab2[NB_MAX_JOURNALISTES]={0};
 
-  printf("DEBUUUUG2\n");
   for (i=0;i<NB_MAX_JOURNALISTES;i++)tab2[i]=0;
   tab2[0]=1;
-
-  printf("DEBUUUUG3\n");
-  //  printf("\x1b[32m\n");
   
   if((semctl(id_ens_sem_redacteurs_prio,0,SETALL,tab)) ==-1){printf("ça déconne\n");perror("semctl1:");}
   if((semctl(id_ens_sem_files_archi,0,SETALL,tab2)) ==-1){printf("ça déconne\n");perror("semctl1:");}
-  /*  printf("val semaphore : \n");
-  if((semctl(id_ens_sem_redacteurs_prio,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-  for (i=0;i<5;i++)printf("%d |",tab[i]);
-
-  printf("\n");
-  int valeurhihi=6;
-  if((semctl(id_ens_sem_files_archi,2,SETVAL,valeurhihi)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-    if((semctl(id_ens_sem_files_archi,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-
-    for (i=0;i<5;i++)printf("%d |",tab[i]);
-  
-  
-  printf("\033[0m\n");
-  */
 
   /***********************************************************************/
     
@@ -410,7 +372,9 @@ int main (int argc, char *argv[]){
     }
     tableau_pid_archivistes[indice_tab_a++]=p;
   }
-    
+
+  fprintf(stderr,"terminée !\n");
+
     
   /**********************************************************************/
   /*                                                                    */
@@ -428,9 +392,9 @@ int main (int argc, char *argv[]){
     rand_requete=rand()%10+1;
 
     categorie_requete=EFFACEMENT;
-    if (rand_requete>1)  //1
+    if (rand_requete>1)  
       categorie_requete=PUBLICATION;
-    if (rand_requete>3)  //3
+    if (rand_requete>3)  
       categorie_requete=CONSULTATION;
 
     printf("dont la catégorie est: %c||%d\n",categorie_requete,rand_requete);
