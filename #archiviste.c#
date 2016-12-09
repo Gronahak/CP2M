@@ -13,19 +13,16 @@ int tabid_shm[100];
 int nb_shm;
 int id_filemessage;
 
-void fin_de_journee(int s){
-  printf("L'archiviste de pid [%d] reçoit le signal %d et rentre chez lui.",getpid(),s);
-  exit (-1);
+void handler1(int signum){
+  int i;
+  /*
+  for(i=0;i<nb_shm;i++){
+    shmctl(tabclef_shm[i],IPC_RMID,NULL);
+    printf("EH\n");
+  }
+  */
+  exit(-1);
 }
-
-void mon_sigaction(int signal, void(*f)(int)){
-  struct sigaction action;
-  action.sa_handler=f;
-  sigemptyset(&action.sa_mask);
-  action.sa_flags=0;
-  sigaction(signal,&action,NULL);
-}
-
 
 
 /* Deux arguments:          */
@@ -33,25 +30,26 @@ void mon_sigaction(int signal, void(*f)(int)){
 /*      -nb_themes          */
 
 int main (int argc, char *argv[]){
-  
-  mon_sigaction(SIGUSR1,fin_de_journee);
-  int i, clef_filemessage,id_message, clef_journa,id_journa,clef_sem_redac_prio,clef_sem_files;
-  int id_sem_R_P,id_sem_F;
+
+  int i, clef_filemessage,id_message,id_journa;
   struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon)),messageenvoi;
+  struct sigaction new;
+  sigset_t ens,ensvide;
   char* contenu[4],tmp[4];
   FILE * fich_cle;
   char id_lu[50];
-
-  
-  ushort tab[5]={0};
-  for (i=0;i<5;i++)tab[i]=0;
-  
   nb_themes=atoi(argv[2]);
   numero_ordre=atoi(argv[1]);
   fprintf(stderr,"test nbtheme %d num ordre %d\n",nb_themes,numero_ordre);
   /* Captage des signaux qui stoppent l'archiviste */
 
-
+  new.sa_handler=handler1;
+  new.sa_flags=0;
+  sigemptyset(&new.sa_mask);
+  sigemptyset(&ens);
+  sigemptyset(&ensvide);
+  sigaddset(&ens,SIGUSR1);
+  sigaction(SIGINT,&new,NULL);
 
   fich_cle = fopen(FICHIER_CLE,"r");
   if (fich_cle==NULL){
@@ -60,39 +58,10 @@ int main (int argc, char *argv[]){
   }
 
   /* On recupere les semaphores */
-  /*    1) ensemble de semaphores propre à l'execution */
   fgets(id_lu,50,fich_cle);
-  clef_sem_redac_prio=atoi(id_lu);
-  if ((id_sem_R_P=semget(clef_sem_redac_prio,0,0))==-1){
-     fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez l'archiviste n°%d.\n",numero_ordre);
-    exit(-1);
- 
-  }
-     printf("\x1b[32m\n");
+  //a faire
 
-     printf("val semaphore arch %d: \n",numero_ordre);
-  if((semctl(id_sem_R_P,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-  for (i=0;i<5;i++)printf("%d |",tab[i]);
-
-  // printf("\n");
-  //  int valeurhihi=6;
-  
-  
-  
-  /*    2) ensemble de semaphores des files d'attentes archivistes*/
-  fgets(id_lu,50,fich_cle);
-  clef_sem_files=atoi(id_lu);
-  if ((id_sem_F=semget(clef_sem_files,0,0))==-1){
-     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);
-     exit(-1);}
-    if((semctl(id_sem_F,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-
-    for (i=0;i<5;i++)printf("%d |",tab[i]);
-    printf("\n");
-
-    printf("\033[0m\n");
-
- 
+  fgets(id_lu,50,fich_cle); //2e a incrementer suivant le msgrcv
   
   /* Recuperation de la file de message */
 
@@ -127,6 +96,7 @@ int main (int argc, char *argv[]){
     /* Si vide > bloque jusqu'à un nouveau message */
         fprintf(stderr,"MESSAGE a recevoir\n");
 	id_message=msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
+    fprintf
     fprintf(stderr,"MESSAGE RECU chez archiv %d\n",numero_ordre);
     *contenu=shmat(tabid_shm[message->theme],NULL,0);
     fprintf(stderr,"MESSAGE traité ????? ET:%d\n",message->num_journaliste);

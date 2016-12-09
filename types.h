@@ -24,7 +24,7 @@
 
 struct tampon{
   long msg_type;
-  char msg_text[4];
+  char msg_text[5];
   char operation;
   int num_journaliste;
   int theme;
