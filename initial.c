@@ -283,8 +283,9 @@ int main (int argc, char *argv[]){
   ushort tab[5]={0};
   for (i=0;i<5;i++)tab[i]=3;
 
-  ushort tab2[5]={0};
-  for (i=0;i<5;i++)tab2[i]=2;  
+  ushort tab2[NB_MAX_JOURNALISTES]={0};
+  for (i=0;i<NB_MAX_JOURNALISTES;i++)tab2[i]=0;
+  tab2[0]=1;
 
   //  printf("\x1b[32m\n");
   
