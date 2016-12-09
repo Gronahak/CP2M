@@ -63,7 +63,7 @@ void arret_brutal(int s){
   char clef_lu[50];
   int id_sem;
   printf("Coup de balai dans les IPC.\n");
-  animation_coup_de_balai();
+  //animation_coup_de_balai();
   
   fich_cle = fopen(FICHIER_CLE,"r");
   if (fich_cle==NULL){
