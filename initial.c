@@ -126,7 +126,7 @@ void mon_sigaction(int signal, void(*f)(int)){
   struct sigaction action;
   action.sa_handler=f;
   sigemptyset(&action.sa_mask);
-  action.sa_flags=0;
+  action.sa_flags=SA_NOCLDSTOP;
   sigaction(signal,&action,NULL);
 }
 
@@ -136,9 +136,7 @@ void usage(const char* chaine){
 }
 
 int main (int argc, char *argv[]){
-
   srand(getpid());
-  
   // pause();
   if (argc!=3){
     usage(argv[0]);
@@ -153,6 +151,11 @@ int main (int argc, char *argv[]){
   }
 
   mon_sigaction(SIGINT,arret_brutal);
+  mon_sigaction(SIGUSR1,arret_brutal);
+  mon_sigaction(SIGUSR2,arret_brutal);
+  mon_sigaction(SIGTERM,arret_brutal);
+  mon_sigaction(SIGSTOP,arret_brutal);
+  mon_sigaction(SIGHUP,arret_brutal);
 
   key_t cle_sem_R_P,cle_sem_file;
   key_t cle_smp;
@@ -194,21 +197,21 @@ int main (int argc, char *argv[]){
   /* 1 - On teste si le fichier cle existe dans 
      le repertoire courant : 
   */
-  fich_cle = fopen(FICHIER_CLE,"r");
-  if (fich_cle==NULL){
-    if (errno==ENOENT){
+  fich_cle = fopen(FICHIER_CLE,"w");
+  // if (fich_cle==NULL){
+  //if (errno==ENOENT){
       /* on le cree                                   */
-      fich_cle=fopen(FICHIER_CLE,"w");
+  //  fich_cle=fopen(FICHIER_CLE,"w");
       if (fich_cle==NULL){
 	printf("Lancement serveur impossible\n");
 	exit(-1);
       }
-    }
-    else{/* Autre probleme                              */
-      printf("Lancement serveur impossible\n");
-      exit(-1);
-    }
-  }
+      //   }
+      //  else{/* Autre probleme                              */
+  // printf("Lancement serveur impossible\n");
+      //   exit(-1);
+      //   }
+      // }
 
   /* 2 - Creation proprement dite                     */
 

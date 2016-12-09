@@ -72,16 +72,16 @@ int main (int argc, char *argv[]){
 
   /* On recupere les semaphores */
   /*    1) ensemble de semaphores propre à l'execution */
-  fgets(id_lu,50,fich_cle);
+  if(fgets(id_lu,50,fich_cle)==NULL)
+    printf("Erreur lecture du fichier\n");
   clef_sem_redac_prio=atoi(id_lu);
   if ((id_sem_R_P=semget(clef_sem_redac_prio,0,0))==-1){
-     fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez l'archiviste n°%d.\n",numero_ordre);
+    fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
- 
   }
-     printf("\x1b[32m\n");
+  printf("\x1b[32m\n");
 
-     printf("val semaphore arch %d: \n",numero_ordre);
+  printf("val semaphore arch %d: \n",numero_ordre);
   if((semctl(id_sem_R_P,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
   for (i=0;i<5;i++)printf("%d |",tab[i]);
 
@@ -91,7 +91,8 @@ int main (int argc, char *argv[]){
   
   
   /*    2) ensemble de semaphores des files d'attentes archivistes*/
-  fgets(id_lu,50,fich_cle);
+  if(fgets(id_lu,50,fich_cle)==NULL)
+    printf("Erreur lecture du fichier\n");
   clef_sem_files=atoi(id_lu);
   if ((id_sem_F=semget(clef_sem_files,0,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);

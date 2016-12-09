@@ -39,7 +39,6 @@ int main (int argc, char *argv[]){
 
   char operation=argv[2][0];
   int numjournaliste=getpid(); // Ou un param ?
-  int nbarchiv_a_appeler=0;
   int id_message;
   // int tmp;
   // struct msqid_ds * info=(struct msqid_ds*)malloc(sizeof(struct msqid_ds));
@@ -66,7 +65,8 @@ int main (int argc, char *argv[]){
   
   /* On recupere les semaphores */
   /*    1) ensemble de semaphores propre à l'execution */
-  fgets(id_lu,50,fich_cle); 
+  if(fgets(id_lu,50,fich_cle)==NULL)
+    printf("Erreur lecture du fichier\n");
   clef_sem_redac_prio=atoi(id_lu);
   if ((id_sem_R_P=semget(clef_sem_redac_prio,0,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez le journaliste n°%d.\n",getpid());
@@ -74,17 +74,18 @@ int main (int argc, char *argv[]){
  
   }
 
-    if((semctl(id_sem_R_P,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-    // for (i=0;i<5;i++)printf("%d |",tab[i]);
+  if((semctl(id_sem_R_P,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+  // for (i=0;i<5;i++)printf("%d |",tab[i]);
 
 
 
-    //  printf("\n");
+  //  printf("\n");
   /* On recupere l'ensemble 2 de semaphore */
   
  
   /*    2) ensemble de semaphores des files d'attentes archivistes*/
-  fgets(id_lu,50,fich_cle);
+  if(fgets(id_lu,50,fich_cle)==NULL)
+    printf("Erreur lecture du fichier\n");
   clef_sem_files=atoi(id_lu);
   if ((id_sem_F=semget(clef_sem_files,0,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez le journaliste n°%d.\n",getpid());
@@ -127,8 +128,8 @@ int main (int argc, char *argv[]){
   /*Lancement file de message */
       
 
-  fgets(id_lu,50,fich_cle); // archiviste
-
+   if (fgets(id_lu,50,fich_cle)==NULL) // archiviste
+     printf("Erreur lecture du fichier");
   clef_filemessage=atoi(id_lu);
 
   if ((id_filemessage=msgget(clef_filemessage,0))==-1){ 
