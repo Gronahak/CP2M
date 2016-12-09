@@ -46,13 +46,13 @@ int indice_tab_j=0;
 void arret_brutal(int s){
   int i;
 
+  printf("\n\n === L'organe de presse va fermer, je congédie les employés en leur envoyant SIGUSR1 ===\n");
   /* Eradication des archivistes et journalistes qui se balladent :*/
   for (i=0;i<NB_MAX_JOURNALISTES;i++){
     if (tableau_pid_journalistes[i]!=0)  kill(tableau_pid_journalistes[i],SIGUSR1);
   }
 
   for (i=0;i<indice_tab_a;i++){
-    printf("    J'envoie SIGUSR1 à l'archiviste %d\n",tableau_pid_archivistes[i]);
      kill(tableau_pid_archivistes[i],SIGUSR1);
   }
   printf("\n");
@@ -63,7 +63,18 @@ void arret_brutal(int s){
   char clef_lu[50];
   int id_sem;
   printf("Coup de balai dans les IPC.\n");
-  //animation_coup_de_balai();
+
+ 
+/*********************************************************/
+/*                                                       */
+/*              RMQ : SI LE BALAI VOUS GENE              */
+/*                   COMMENTEZ LA LIGNE                  */
+/*                        SUIVANTE                       */
+/*                                                       */
+/*********************************************************/
+  
+  animation_coup_de_balai(); /* < ====  ICI  */
+
   
   fich_cle = fopen(FICHIER_CLE,"r");
   if (fich_cle==NULL){

@@ -221,7 +221,9 @@ int main (int argc, char *argv[]){
     if ((id_message=msgrcv(id_filemessage,message_recu,(sizeof(struct tampon)),getpid(),MSG_NOERROR))>0){
       /* Affichage du résultat de la requête en fonction de l'operation */
       /* On verifie bien si il y a un message d'erreur > requete non effectué (impossible) */
-      
+
+        printf("\x1b[32m");
+
       switch (message_recu->operation){
       case 'c':
 	if (strcmp(message_recu->msg_text,"ERRN")==0)
@@ -238,6 +240,8 @@ int main (int argc, char *argv[]){
 	  printf("[Journaliste %d] L'effacement a échoué, l'article %d (theme %d) n'existe pas.\n",message->num_journaliste,message->num_article,message->theme);
 	else printf("[Journaliste %d] Effacement de l'article %d (theme %d) réussi.\n",message->num_journaliste,message->num_article,message->theme);
       }
+  printf("\033[0m");
+
       break; /* On casse la boucle while */
     }
   }

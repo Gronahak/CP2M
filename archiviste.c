@@ -16,7 +16,7 @@ extern int nombre_redacteurs;
 extern int nombre_lecteurs;
 
 void fin_de_journee(int s){
-  printf("L'archiviste de pid [%d] reçoit le signal %d et rentre chez lui.\n",getpid(),s);
+  printf(" L' archiviste de pid [%d] reçoit le signal %d et rentre chez lui.\n",getpid(),s);
   exit (-1);
 }
 
@@ -40,7 +40,7 @@ void modification_num_sem(int num,struct sembuf *action){
 }
 
 int main (int argc, char *argv[]){
-  //  srand(getpid());
+  srand(getpid());
   sigset_t sig;
   sigfillset(&sig);
   sigdelset(&sig,SIGUSR1);
@@ -58,14 +58,12 @@ int main (int argc, char *argv[]){
   struct sembuf P={0,-1,SEM_UNDO};
   struct sembuf V={0,+1,SEM_UNDO};    
   
-  int  taille_de_la_file=0;
 
   /* Récupération des arguments */
 
   numero_ordre=atoi(argv[1]);
   nb_themes=atoi(argv[2]);
 
-  srand(getpid());
   
   /* Masquage des signaux qui stoppent l'archiviste */
 
@@ -93,7 +91,7 @@ int main (int argc, char *argv[]){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);}
  
-  taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
+  //  taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
 
   /* Recuperation de la file de message */
 
@@ -122,6 +120,7 @@ int main (int argc, char *argv[]){
   /* Traitement des messages */
   while(1){
     sleep(rand()%4+4);
+
     int indice=0;
     int numarti=0;
     
@@ -151,7 +150,6 @@ int main (int argc, char *argv[]){
       modification_num_sem(3,&P);      
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (NOMBRE)occupé\n");perror("mutex (NOMBRE) occupé");}
       nombre_lecteurs++;
-    printf("_____________________________________________________________________________________\n|                                  %d|%d                                            |\n________________________________________________________________________%d_\n",nombre_redacteurs,nombre_lecteurs,numero_ordre);
       if (nombre_lecteurs==1){//Premier lecteur 
 	//// Prendre le semaphore du theme concerné
 	modification_num_sem(4+(message->theme),&P);      
@@ -187,7 +185,6 @@ int main (int argc, char *argv[]){
       modification_num_sem(3,&P);      
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (NOMBRE)occupé\n");perror("mutex (NOMBRE) occupé");}
       nombre_lecteurs--;
-    printf("_____________________________________________________________________________________\n|                                  %d|%d                                            |\n________________________________________________________________________%d_\n",nombre_redacteurs,nombre_lecteurs,numero_ordre);
 
       if (nombre_lecteurs==0){//Dernier lecteur 
 	//// Rendre le sémaphore du theme concerné :
@@ -214,7 +211,6 @@ int main (int argc, char *argv[]){
       modification_num_sem(0,&P);
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (redacteurs)occupé\n");perror("mutex (redacteurs) occupé");}
       nombre_redacteurs++;
-    printf("_____________________________________________________________________________________\n|                                  %d|%d                                            |\n________________________________________________________________________%d_\n",nombre_redacteurs,nombre_lecteurs,numero_ordre);
 
       if (nombre_redacteurs==1){//Premier redacteur 
 
@@ -266,7 +262,6 @@ int main (int argc, char *argv[]){
       modification_num_sem(0,&P);
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (redacteurs)occupé\n");perror("mutex (redacteurs) occupé");}
       nombre_redacteurs--;
-    printf("_____________________________________________________________________________________\n|                                  %d|%d                                            |\n_________________________________________________________________________%d_\n",nombre_redacteurs,nombre_lecteurs,numero_ordre);
 
       if(nombre_redacteurs==0){// Dernier redacteur
 	
@@ -296,7 +291,6 @@ int main (int argc, char *argv[]){
       modification_num_sem(0,&P);
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (redacteurs)occupé\n");perror("mutex (redacteurs) occupé");}
       nombre_redacteurs++;
-      printf("_____________________________________________________________________________________\n|                                  %d|%d                                            |\n________________________________________________________________________%d_\n",nombre_redacteurs,nombre_lecteurs,numero_ordre);
       if (nombre_redacteurs==1){//Premier redacteur 
 	//// Prendre le sémaphore (lecture) qui est le 1er:
 	modification_num_sem(1,&P);      
@@ -338,7 +332,6 @@ int main (int argc, char *argv[]){
       modification_num_sem(0,&P);
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (redacteurs)occupé\n");perror("mutex (redacteurs) occupé");}
       nombre_redacteurs--;
-    printf("_____________________________________________________________________________________\n|                                  %d|%d                                            |\n________________________________________________________________________%d_\n",nombre_redacteurs,nombre_lecteurs,numero_ordre);
 
       if(nombre_redacteurs==0){// Dernier redacteur
 	
@@ -363,7 +356,6 @@ int main (int argc, char *argv[]){
       shmdt(&contenu);
     printf("\n");
 
-    taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
 
     //// prendre mutex file
     modification_num_sem(0,&P);
@@ -375,18 +367,10 @@ int main (int argc, char *argv[]){
     V2.sem_op=-1;
     V2.sem_flg=0;
 
-    /*
-    printf("_______________________\n");
-    for (i=1;i<numero_ordre;i++)printf("\t");
-    printf("|%d|",taille_de_la_file);*/
-    semop(id_sem_F,&V2,1);
+  
+    if((  semop(id_sem_F,&V2,1))==-1){printf("mutex occupé\n");perror("mutex files occupé");};
 
   
-    taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
-    /*
-    printf("|%d|\n",taille_de_la_file);
-    printf("_______________________\n");
-    */
     //// rendre mutex file
 
     modification_num_sem(0,&V);
