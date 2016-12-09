@@ -35,9 +35,9 @@ void mon_sigaction(int signal, void(*f)(int)){
 int main (int argc, char *argv[]){
   
   mon_sigaction(SIGUSR1,fin_de_journee);
-  int i, clef_filemessage,id_message, clef_journa,id_journa,clef_sem_redac_prio,clef_sem_files;
+  int i, clef_filemessage,id_message, /*clef_journa,id_journa,*/clef_sem_redac_prio,clef_sem_files;
   int id_sem_R_P,id_sem_F;
-  struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon)),messageenvoi;
+  struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon));//messageenvoi;
   char* contenu[4],tmp[4];
   FILE * fich_cle;
   char id_lu[50];
@@ -87,7 +87,9 @@ int main (int argc, char *argv[]){
      exit(-1);}
     if((semctl(id_sem_F,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
 
-    for (i=0;i<5;i++)printf("%d |",tab[i]);
+        printf("\n");
+
+    for (i=0;i<=numero_ordre;i++)printf("%d |",tab[i]);
     printf("\n");
 
     printf("\033[0m\n");
