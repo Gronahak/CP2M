@@ -197,7 +197,7 @@ int main (int argc, char *argv[]){
   /* 1 - On teste si le fichier cle existe dans 
      le repertoire courant : 
   */
-  fich_cle = fopen(FICHIER_CLE,"w");
+  fich_cle = fopen(FICHIER_CLE,"w"); //sinon r
   // if (fich_cle==NULL){
   //if (errno==ENOENT){
       /* on le cree                                   */
