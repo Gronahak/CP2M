@@ -45,7 +45,6 @@ int indice_tab_j=0;
 
 void arret_brutal(int s){
   int i;
-  int statut;
   /* Eradication des archivistes et journalistes qui se balladent :*/
   for (i=0;i<NB_MAX_JOURNALISTES;i++){
     if (tableau_pid_journalistes[i]!=0)  kill(tableau_pid_journalistes[i],SIGUSR1);
@@ -75,8 +74,6 @@ void arret_brutal(int s){
   if (fgets(clef_lu,50,fich_cle)==NULL)
     fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
-  printf("<<<%s\n",clef_lu);
-  printf(">>%d\n",id_sem);
   if ((id_sem=semget(id_sem,0,0))==-1){
     printf("recup impossible\n");
     perror("ohnon");
@@ -91,8 +88,6 @@ void arret_brutal(int s){
   if (fgets(clef_lu,50,fich_cle)==NULL)
     fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
-  printf("<<<%s\n",clef_lu);
-  printf(">>%d\n",id_sem);
   if ((id_sem=semget(id_sem,0,0))==-1){
     printf("recup impossible\n");
     perror("ohnon");
@@ -114,7 +109,6 @@ void arret_brutal(int s){
   /* Tout le reste sont les segments de memoire partagée par thème */
   int id_shm;
   while(fgets(clef_lu,50,fich_cle)){
-    printf("<<<<<<<%s\n",clef_lu);
     id_shm=atoi(clef_lu);
     if ((id_shm=shmget(id_shm,0,0))==-1){
       printf("recup impossible\n");
@@ -217,24 +211,13 @@ int main (int argc, char *argv[]){
       
 
   /* Creation de la cle :                                 */
-  /* 1 - On teste si le fichier cle existe dans 
-     le repertoire courant : 
-  */
-  fich_cle = fopen(FICHIER_CLE,"w"); //sinon r
-  // if (fich_cle==NULL){
-  //if (errno==ENOENT){
-      /* on le cree                                   */
-  //  fich_cle=fopen(FICHIER_CLE,"w");
-      if (fich_cle==NULL){
-	printf("Lancement serveur impossible\n");
-	exit(-1);
-      }
-      //   }
-      //  else{/* Autre probleme                              */
-  // printf("Lancement serveur impossible\n");
-      //   exit(-1);
-      //   }
-      // }
+  /* 1 - On cree ou ecrase le fichier                     */
+  
+  fich_cle = fopen(FICHIER_CLE,"w");
+  if (fich_cle==NULL){
+    printf("Lancement serveur impossible\n");
+    exit(-1);
+  }
 
   /* 2 - Creation proprement dite                     */
 
@@ -309,18 +292,15 @@ int main (int argc, char *argv[]){
 
   /************* initialisation des Ensembles de sémaphores **************/
 
-  printf("DEBUUUUG1\n");
   ushort *tab;
   tab = (ushort*)malloc((4+nb_themes)*sizeof(ushort));
   if (tab==NULL){printf("Y'a plus de memoiren abandonnez le navire.\n") ;exit(-1);}
   for (i=0;i<4+nb_themes;i++)tab[i]=1;
   ushort tab2[NB_MAX_JOURNALISTES]={0};
-
-  printf("DEBUUUUG2\n");
+  
   for (i=0;i<NB_MAX_JOURNALISTES;i++)tab2[i]=0;
   tab2[0]=1;
 
-  printf("DEBUUUUG3\n");
   //  printf("\x1b[32m\n");
   
   if((semctl(id_ens_sem_redacteurs_prio,0,SETALL,tab)) ==-1){printf("ça déconne\n");perror("semctl1:");}
