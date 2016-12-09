@@ -65,7 +65,8 @@ void arret_brutal(int s){
     printf("fich inexistant\n");
     exit(-1);
   }
-  fgets(clef_lu,50,fich_cle);
+  if (fgets(clef_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
   printf("<<<%s\n",clef_lu);
   printf(">>%d\n",id_sem);
@@ -79,7 +80,8 @@ void arret_brutal(int s){
     exit (-1);
   }
 
-  fgets(clef_lu,50,fich_cle);
+  if (fgets(clef_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
   printf("<<<%s\n",clef_lu);
   printf(">>%d\n",id_sem);
@@ -94,7 +96,8 @@ void arret_brutal(int s){
   }
 
   int id_fm;
-  fgets(clef_lu,50,fich_cle);
+  if (fgets(clef_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   id_fm=msgget(atoi(clef_lu),0);
   msgctl(id_fm,IPC_RMID,NULL);
   
@@ -325,11 +328,17 @@ int main (int argc, char *argv[]){
   for (i=0;i<nb_themes;i++){
     cle_smp=ftok(FICHIER_CLE,'a'+i+2);
     char cle_smp_chaine[50]={'\0'};
+    char* contenu, init[NB_MAX_ARTICLES*4];
     if ((id_smp=shmget(cle_smp,NB_MAX_ARTICLES*4,IPC_CREAT|IPC_EXCL|0666))==-1)
       {
 	printf("Création du segment de mémoire partagée impossible\n");
 	exit(1);
       }
+    for(i=0;i<NB_MAX_ARTICLES*4;i++)
+      init[i]='-';
+    contenu=shmat(id_smp,0,0);
+    strcpy(contenu,init);
+    shmdt(&id_smp);
     printf("\tcle du smp %d : %xd\n",i,cle_smp);
     sprintf(cle_smp_chaine,"%d",cle_smp);
     fputs(cle_smp_chaine,fich_cle);
@@ -388,9 +397,9 @@ int main (int argc, char *argv[]){
     rand_requete=rand()%10+1;
 
     categorie_requete=EFFACEMENT;
-    if (rand_requete>1)
+    if (rand_requete>2)  //1
       categorie_requete=PUBLICATION;
-    if (rand_requete>3)
+    if (rand_requete>8)  //3
       categorie_requete=CONSULTATION;
 
     printf("dont la catégorie est: %c||%d\n",categorie_requete,rand_requete);
@@ -413,6 +422,7 @@ int main (int argc, char *argv[]){
       char arg3[2]={'\0'};
       arg3[0]=theme;
       argexecve[3]=arg3;
+      fprintf(stdout,"TEST ARGV3 %d\n",theme);
 
       int numero_article;
 

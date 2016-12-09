@@ -35,10 +35,12 @@ void mon_sigaction(int signal, void(*f)(int)){
 int main (int argc, char *argv[]){
   
   mon_sigaction(SIGUSR1,fin_de_journee);
-  int i, clef_filemessage,id_message, /*clef_journa,id_journa,*/clef_sem_redac_prio,clef_sem_files;
+
+  int i, clef_filemessage,clef_sem_redac_prio,clef_sem_files;
   int id_sem_R_P,id_sem_F;
-  struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon));//messageenvoi;
-  char* contenu[4],tmp[4];
+  struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon));
+  struct tampon* message_envoi=(struct tampon*)malloc(sizeof(struct tampon));
+  char* contenu;
   FILE * fich_cle;
   char id_lu[50];
 
@@ -95,10 +97,12 @@ int main (int argc, char *argv[]){
     printf("\033[0m\n");
 
  
+
   
   /* Recuperation de la file de message */
 
-  fgets(id_lu,50,fich_cle);
+  if (fgets(id_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   clef_filemessage=atoi(id_lu);
   if ((id_filemessage=msgget(clef_filemessage,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation de la file de message chez l'archiviste n°%d.\n",numero_ordre);
@@ -121,42 +125,71 @@ int main (int argc, char *argv[]){
 
   
   fclose(fich_cle);
-
-  
+  printf("\n");
   /* Traitement des messages */
   while(1){
+    int indice=0;
+    int numarti=0;
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
-        fprintf(stderr,"MESSAGE a recevoir\n");
-	id_message=msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
-    fprintf(stderr,"MESSAGE RECU chez archiv %d\n",numero_ordre);
-    *contenu=shmat(tabid_shm[message->theme],NULL,0);
-    fprintf(stderr,"MESSAGE traité ????? ET:%d\n",message->num_journaliste);
-    //strcpy(tmp,message.msg_text);
+    // fprintf(stderr,"MESSAGE a recevoir\n");
+    msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
+    contenu=shmat(tabid_shm[message->theme],0,0);
+    // fprintf(stderr,"Testinfos: %d OU %s et operation %c theme %d\n",message->num_journaliste,message->msg_text,message->operation,message->theme);
 
     /* /!\ Ouvrir la file de message du jouraliste pour lui envoyer un message */ 
     switch(message->operation){
     case CONSULTATION: /* consulter l'article */
-      /* envoie un message avec le contenu */
+      message_envoi->operation='c';
+      if (message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
+	printf("\t[Archiviste %d] Numéro d'article non existant (consultation)\n",numero_ordre);
+	strcpy(message_envoi->msg_text,"ERRN");
+	break;
+      }
+      for (i=0;i<4;i++)
+	message_envoi->msg_text[i]=contenu[4*message->num_article+i];
+      printf("\t[Archiviste %d] Consultation de l'article %d (theme %d)\n",numero_ordre,message->num_article,message->theme);
       break;
     case PUBLICATION: /* publier l'article */
       /* verif semaphore theme */
-      strcat(*contenu,tmp);
-      fprintf(stdout,"Article publié MAGUEULE\n");
+      message_envoi->operation='p';
+      while (contenu[indice]!='-' && indice<4*NB_MAX_ARTICLES){
+	indice+=4;
+	numarti++;
+      }
+      if(indice==4*NB_MAX_ARTICLES){
+	strcpy(message_envoi->msg_text,"ERMA");
+	printf("\t[Archiviste %d] Nombre maximum d'aricles atteint pour le theme %d (publication).\n",numero_ordre,message->theme);
+	break;
+      }
+      for (i=0;i<4;i++)
+	contenu[4*numarti+i]=message->msg_text[i];
+      message_envoi->num_article=numarti;
+      printf("\t[Archiviste %d] Article %d [%s] (theme %d) publié.\n",numero_ordre,numarti,message->msg_text,message->theme);
+	    
       break;
     case EFFACEMENT: /* supprimer l'article */
       /* verif semaphore theme */
-      //*contenu=strtok(*contenu,tmp);//NON
-      fprintf(stdout,"Article supprimé BOYAH\n");
+      message_envoi->operation='e';
+      if(message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
+	printf("\t[Archiviste %d] Effacement de l'article %d (theme %d) impossible (non existant).\n",numero_ordre,message->num_article,message->theme);
+	strcpy(message_envoi->msg_text,"ERNE");
+	break;
+      }
+      for (i=0;i<4;i++)
+	contenu[4*message->num_article+i]='-';
+      fprintf(stdout,"\t[Archiviste %d] Article %d (theme %d) supprimé.\n",numero_ordre,message->num_article,message->theme);
       break;
     default: break;
     }
     /* On previent le journaliste de l'action */
-    //  if (msgsnd(clef_journa,&messageenvoi,10,IPC_NOWAIT)==-1)
-    //exit(-1);
-   
-    shmdt(&id_message);
-    fprintf(stderr,"MESSAGE traité ?\n");
+    message_envoi->msg_type=message->num_journaliste;
+    if (msgsnd(id_filemessage,message_envoi,sizeof(struct tampon),0)==-1)
+
+    shmdt(&tabid_shm[message->theme]);
+    printf("\n");
+    /* ON réinitialise*/
+    strcpy(message_envoi->msg_text,"NADA");
   }
 
   /* On supprime les sémaphores */
