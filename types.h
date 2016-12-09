@@ -22,6 +22,8 @@
 #define PUBLICATION 'p'
 #define CONSULTATION 'c'
 
+int nombre_redacteurs;
+int nombre_lecteurs;
 struct tampon{
   long msg_type;
   char msg_text[5];
