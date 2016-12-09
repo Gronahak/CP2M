@@ -12,9 +12,9 @@
 #include <sys/msg.h>
 #include <time.h>
 
-#define FICHIER_CLE "cle.serv"
-
+#define FICHIER_CLE "cle.serv" // Fichier servant à stocker les clefs des IPC utilisées
 #define LETTRE_CODE 'a'
+
 #define NB_MAX_ARTICLES 10
 #define NB_MAX_JOURNALISTES 1000
 
@@ -22,8 +22,9 @@
 #define PUBLICATION 'p'
 #define CONSULTATION 'c'
 
-int nombre_redacteurs;
+int nombre_redacteurs; // Variables globales pour l'execution du processus avec priorité aux redacteurs 
 int nombre_lecteurs;
+
 struct tampon{
   long msg_type;
   char msg_text[5];
