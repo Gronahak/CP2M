@@ -30,8 +30,12 @@ int main (int argc, char *argv[]){
 
   mon_sigaction(SIGUSR1,fin_de_journee);
 
-  pause();
-  int  clef_filemessage,id_filemessage;
+  // pause();
+
+  int i;
+
+  int  clef_filemessage,id_filemessage,clef_sem_redac_prio,clef_sem_files;
+  int id_sem_R_P,id_sem_F;
   // int nb_archiviste=atoi(argv[1]);
   char operation=argv[2][0];
   int numjournaliste=getpid(); // Ou un param ?
@@ -47,24 +51,49 @@ int main (int argc, char *argv[]){
     printf("Fichier inexistant\n");
     exit(-1);
   }
+
   
+  ushort tab[5]={0};
+  for (i=0;i<5;i++)tab[i]=0;
+  
+  /* On recupere les semaphores */
+  /*    1) ensemble de semaphores propre à l'execution */
+  fgets(id_lu,50,fich_cle); 
+  clef_sem_redac_prio=atoi(id_lu);
+  if ((id_sem_R_P=semget(clef_sem_redac_prio,0,0))==-1){
+    fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez le journaliste n°%d.\n",getpid());
+    exit(-1);
+ 
+  }
 
-  //  erreur=
-    fgets(id_lu,50,fich_cle); //semaphores1 inutiles ici
+    if((semctl(id_sem_R_P,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+  for (i=0;i<5;i++)printf("%d |",tab[i]);
 
+  printf("\n");
   /* On recupere l'ensemble 2 de semaphore */
   
-    //  erreur=
-    fgets(id_lu,50,fich_cle); // semaphore2 a traiter
+ 
+  /*    2) ensemble de semaphores des files d'attentes archivistes*/
+  fgets(id_lu,50,fich_cle);
+  clef_sem_files=atoi(id_lu);
+  if ((id_sem_F=semget(clef_sem_files,0,0))==-1){
+    fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez le journaliste n°%d.\n",getpid());
+    exit(-1);
+  }
+    if((semctl(id_sem_F,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+  for (i=0;i<5;i++)printf("%d |",tab[i]);
+
+  printf("\n");
+
 
   /*Lancement file de message */
       
-    //  erreur=
-    fgets(id_lu,50,fich_cle); // archiviste
+
+  fgets(id_lu,50,fich_cle); // archiviste
   clef_filemessage=atoi(id_lu);
 
-  if ((id_filemessage=msgget(clef_filemessage,0660))==-1){ 
-    fprintf(stderr,"Probleme dans la recuperation de la file de message.\n");
+  if ((id_filemessage=msgget(clef_filemessage,0))==-1){ 
+    fprintf(stderr,"Probleme dans la recuperation de la file de message.journ %d\n",getpid());
     perror("erreur: ");
     exit(-1);
   }
@@ -99,10 +128,10 @@ int main (int argc, char *argv[]){
 
   /* On attend le message à recevoir */
   //while(1)
-    //  msgrcv
-    //  break; 
+  //  msgrcv
+  //  break; 
   /* On supprime tous les IPC */
   
-  msgctl(id_filemessage,IPC_RMID,NULL);
+  //  msgctl(id_filemessage,IPC_RMID,NULL);
   //ctl des semaphores
 }
