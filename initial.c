@@ -22,13 +22,13 @@ void animation_coup_de_balai(){
     printf("/");
     fflush(stdout);
     nanosleep(&tim,NULL);
-    printf("\b");  fflush(stdout);
+    printf("\b\a");  fflush(stdout);
     fflush(stdout);
     nanosleep(&tim,NULL);  
     printf("\\");
     fflush(stdout);
     nanosleep(&tim,NULL);
-    printf("\b");  fflush(stdout);
+    printf("\b\a");  fflush(stdout);
     printf(" ");  fflush(stdout);
     fflush(stdout);
     i++;
@@ -45,12 +45,14 @@ int indice_tab_j=0;
 
 void arret_brutal(int s){
   int i;
+  int statut;
   /* Eradication des archivistes et journalistes qui se balladent :*/
   for (i=0;i<NB_MAX_JOURNALISTES;i++){
     if (tableau_pid_journalistes[i]!=0)  kill(tableau_pid_journalistes[i],SIGUSR1);
-    
   }
+
   for (i=0;i<indice_tab_a;i++){
+    printf("    J'envoie SIGUSR1 à l'archiviste %d\n",tableau_pid_archivistes[i]);
      kill(tableau_pid_archivistes[i],SIGUSR1);
   }
   printf("\n");
@@ -127,6 +129,7 @@ void arret_brutal(int s){
   
   printf("Coup de balai fini\n");
   fclose(fich_cle);
+  wait(NULL);
   exit(1);
   
 }
@@ -169,7 +172,7 @@ int main (int argc, char *argv[]){
 
   /* Ces signaux arrêtent tous les processus */
   mon_sigaction(SIGINT,arret_brutal);
-  mon_sigaction(SIGUSR1,arret_brutal);
+   mon_sigaction(SIGUSR1,arret_brutal);
   mon_sigaction(SIGUSR2,arret_brutal);
   mon_sigaction(SIGTERM,arret_brutal);
   mon_sigaction(SIGSTOP,arret_brutal);
