@@ -93,11 +93,6 @@ int main (int argc, char *argv[]){
     exit(-1);
   }
 
-  /*
-    if((semctl(id_sem_F,5,GETALL,taille_des_files)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-    printf("Je récupere la taille des files:\n");
-    for (i=0;i<=nb_archiviste;i++)printf("%d |",taille_des_files[i]);
-  */
 
   for (i=0;i<=nb_archiviste;i++){
     taille_des_files[i]=semctl(id_sem_F,i,GETVAL);
@@ -106,24 +101,6 @@ int main (int argc, char *argv[]){
 
   printf("\n");
 
-
-  //     printf("DDDDDDDDDDDD\n");
-  // for (i=0;i<5;i++)tab_test[i]=0;
-  // int okok=0;
-  //   if((semctl(id_sem_F,0,GETVAL,okok)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-  //  for (i=0;i<=nb_archiviste;i++)printf("%d |",tab_test[i]);
-  /*
-    okok=(semctl(id_sem_F,0,GETVAL));
-    printf("%d\n",okok);
-
-    okok=(semctl(id_sem_F,1,GETVAL));
-    printf("%d\n",okok);
-    okok=(semctl(id_sem_F,2,GETVAL));
-
-    printf("%d\n",okok);
-
-
-    printf("CCCCCCCC\n"); */
 
 
   /**************  Lancement file de message  **************/
@@ -159,7 +136,47 @@ int main (int argc, char *argv[]){
 
   }
   printf("Je suis le journaliste %d et j'ai choisi le guichet %d car il n'y a que %d journalistes dans cette file.\n",getpid(),bon_guichet,taille_des_files[bon_guichet]);
- 
+
+  /************************************************************************************************************/
+  /*                                       Fonction d'affichage des files                                     */
+  /*                                                                                                          */
+  /************************************************************************************************************/
+  char grosse_chaine[5000];
+  int indice_G_C=0;
+  int j,k;
+  for (i=0;i<30;i++){
+    grosse_chaine[indice_G_C]='_';
+    indice_G_C++;
+  }
+   
+  grosse_chaine[indice_G_C]='\n';
+  indice_G_C++;
+  for(k=1;k<=nb_archiviste;k++){
+    grosse_chaine[indice_G_C]='|';
+    indice_G_C++;
+    grosse_chaine[indice_G_C]='1'+k-1;
+    indice_G_C++;   
+    grosse_chaine[indice_G_C]='|';
+    indice_G_C++;   
+
+    for (j=0;j<taille_des_files[k];j++){
+      grosse_chaine[indice_G_C]='@';
+      indice_G_C++;
+    }
+    grosse_chaine[indice_G_C]='|';
+    indice_G_C++;
+    
+    grosse_chaine[indice_G_C]='\n';
+    indice_G_C++;
+
+    
+  }
+    grosse_chaine[indice_G_C]='\0';
+    printf("%s\n",grosse_chaine);
+
+
+
+  
   struct sembuf V2;
   V2.sem_num=bon_guichet;
   V2.sem_op=1;
