@@ -79,12 +79,12 @@ int main (int argc, char *argv[]){
 
   /* On recupere les semaphores */
   /*    1) ensemble de semaphores propre à l'execution */
-  fgets(id_lu,50,fich_cle);
+  if(fgets(id_lu,50,fich_cle)==NULL)
+    printf("Erreur lecture du fichier\n");
   clef_sem_redac_prio=atoi(id_lu);
   if ((id_sem_R_P=semget(clef_sem_redac_prio,0,0))==-1){
-     fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez l'archiviste n°%d.\n",numero_ordre);
+    fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
- 
   }
   printf("\x1b[32m\n");
 
@@ -95,7 +95,8 @@ int main (int argc, char *argv[]){
   
   
   /*    2) ensemble de semaphores des files d'attentes archivistes*/
-  fgets(id_lu,50,fich_cle);
+  if(fgets(id_lu,50,fich_cle)==NULL)
+    printf("Erreur lecture du fichier\n");
   clef_sem_files=atoi(id_lu);
   if ((id_sem_F=semget(clef_sem_files,0,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);
@@ -291,7 +292,7 @@ int main (int argc, char *argv[]){
     message_envoi->msg_type=message->num_journaliste;
     if (msgsnd(id_filemessage,message_envoi,sizeof(struct tampon),0)==-1)
 
-    shmdt(&tabid_shm[message->theme]);
+    shmdt(&contenu);
     printf("\n");
 
     

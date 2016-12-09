@@ -126,7 +126,7 @@ void mon_sigaction(int signal, void(*f)(int)){
   struct sigaction action;
   action.sa_handler=f;
   sigemptyset(&action.sa_mask);
-  action.sa_flags=0;
+  action.sa_flags=SA_NOCLDSTOP;
   sigaction(signal,&action,NULL);
 }
 
@@ -142,8 +142,8 @@ int main (int argc, char *argv[]){
   
   nombre_redacteurs=0;
   nombre_lecteurs=0;
+
   srand(getpid());
-  
   // pause();
   if (argc!=3){
     usage(argv[0]);
@@ -158,6 +158,11 @@ int main (int argc, char *argv[]){
   }
 
   mon_sigaction(SIGINT,arret_brutal);
+  mon_sigaction(SIGUSR1,arret_brutal);
+  mon_sigaction(SIGUSR2,arret_brutal);
+  mon_sigaction(SIGTERM,arret_brutal);
+  mon_sigaction(SIGSTOP,arret_brutal);
+  mon_sigaction(SIGHUP,arret_brutal);
 
   key_t cle_sem_R_P,cle_sem_file;
   key_t cle_smp;
@@ -199,21 +204,21 @@ int main (int argc, char *argv[]){
   /* 1 - On teste si le fichier cle existe dans 
      le repertoire courant : 
   */
-  fich_cle = fopen(FICHIER_CLE,"r");
-  if (fich_cle==NULL){
-    if (errno==ENOENT){
+  fich_cle = fopen(FICHIER_CLE,"w");
+  // if (fich_cle==NULL){
+  //if (errno==ENOENT){
       /* on le cree                                   */
-      fich_cle=fopen(FICHIER_CLE,"w");
+  //  fich_cle=fopen(FICHIER_CLE,"w");
       if (fich_cle==NULL){
 	printf("Lancement serveur impossible\n");
 	exit(-1);
       }
-    }
-    else{/* Autre probleme                              */
-      printf("Lancement serveur impossible\n");
-      exit(-1);
-    }
-  }
+      //   }
+      //  else{/* Autre probleme                              */
+  // printf("Lancement serveur impossible\n");
+      //   exit(-1);
+      //   }
+      // }
 
   /* 2 - Creation proprement dite                     */
 
@@ -343,11 +348,12 @@ int main (int argc, char *argv[]){
 	printf("Création du segment de mémoire partagée impossible\n");
 	exit(1);
       }
-    for(i=0;i<NB_MAX_ARTICLES*4;i++)
-      init[i]='-';
+    int j;
+    for(j=0;j<NB_MAX_ARTICLES*4;j++)
+      init[j]='-';
     contenu=shmat(id_smp,0,0);
     strcpy(contenu,init);
-    shmdt(&id_smp);
+    shmdt(&contenu);
     printf("\tcle du smp %d : %xd\n",i,cle_smp);
     sprintf(cle_smp_chaine,"%d",cle_smp);
     fputs(cle_smp_chaine,fich_cle);
@@ -429,10 +435,8 @@ int main (int argc, char *argv[]){
       int theme;
       theme=rand()%nb_themes;
       char arg3[2]={'\0'};
-      arg3[0]=theme;
+      sprintf(arg3,"%d",theme);
       argexecve[3]=arg3;
-      fprintf(stdout,"TEST ARGV3 %d\n",theme);
-
       int numero_article;
 
       char article[5];
