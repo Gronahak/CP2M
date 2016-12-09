@@ -45,7 +45,7 @@ void arret_brutal(int s){
   int i;
   /* Eradication des archivistes et journalistes qui se balladent :*/
   for (i=0;i<NB_MAX_JOURNALISTES;i++){
-    //printf("j%d : %d\n",i,tableau_pid_journalistes[i]);
+    //    printf("j%d : %d\n",i,tableau_pid_journalistes[i]);
     if (tableau_pid_journalistes[i]!=0) kill(tableau_pid_journalistes[i],SIGUSR1);
   }
   for (i=0;i<indice_tab_a;i++){
@@ -151,10 +151,12 @@ int main (int argc, char *argv[]){
 
   mon_sigaction(SIGINT,arret_brutal);
 
-  key_t cle_sem;
+  key_t cle_sem_R_P,cle_sem_file;
   key_t cle_smp;
   FILE *fich_cle;
-  char cle_sem_chaine[100]={'\0'};
+  char cle_sem_R_P_chaine[100]={'\0'};
+  char cle_sem_file_chaine[100]={'\0'};
+
   char clef_filemess[100]={'\0'};
   //  char nb_themes_chaine[5]={'\0'};
   int clef_filemessage,id_filemessage;
@@ -207,12 +209,12 @@ int main (int argc, char *argv[]){
 
   /* 2 - Creation proprement dite                     */
 
-  cle_sem = ftok(FICHIER_CLE,LETTRE_CODE);
-  sprintf(cle_sem_chaine,"%d",cle_sem);
-  fputs(cle_sem_chaine,fich_cle);
+  cle_sem_R_P = ftok(FICHIER_CLE,LETTRE_CODE);
+  sprintf(cle_sem_R_P_chaine,"%d",cle_sem_R_P);
+  fputs(cle_sem_R_P_chaine,fich_cle);
   fputc('\n',fich_cle);
 
-  printf("\tcle de l'es redac prio : %xd \n",cle_sem);
+  printf("\tcle de l'es redac prio : %xd \n",cle_sem_R_P);
 
 
   /**********************************************************************/
@@ -234,7 +236,7 @@ int main (int argc, char *argv[]){
   /* rédacteurs avec priorité aux rédacteurs                             */
 
 
-  if ((id_ens_sem_redacteurs_prio=semget(cle_sem,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
+  if ((id_ens_sem_redacteurs_prio=semget(cle_sem_R_P,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
     printf("Echec creation ES redacteurs prio\n");
     perror("ES redacteurs_prio fail");
   }
@@ -259,20 +261,52 @@ int main (int argc, char *argv[]){
 
 
   /* 2- Creation de l'ensemble de sémaphores qui contient                */
-  /*  nb_archivistes sémaphores                                          */
+  /*  nb_archivistes + 1  sémaphores                                     */
+  /*    × 1 sem pour chaque archi qui dit la taille de la file           */
+  /*    × 1 sem mutex pour que les journalistes modifient proprement     */
+  /*      la taille des files                                            */
   /* Cet ensemble de sémaphores sert à connaitre en temps réel quel est  */
   /* l'archiviste le moins occupé                                        */
 
-  cle_sem = ftok(FICHIER_CLE,LETTRE_CODE+1);
-  sprintf(cle_sem_chaine,"%d",cle_sem);
-  fputs(cle_sem_chaine,fich_cle);
-  printf("\tcle de l'es taille des files : %xd \n",cle_sem);
-  if ((id_ens_sem_files_archi=semget(cle_sem,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
+  cle_sem_file = ftok(FICHIER_CLE,LETTRE_CODE+1);
+  sprintf(cle_sem_file_chaine,"%d",cle_sem_file);
+  fputs(cle_sem_file_chaine,fich_cle);
+  printf("\tcle de l'es taille des files : %xd \n",cle_sem_file);
+  if ((id_ens_sem_files_archi=semget(cle_sem_file,1+nb_archivistes,IPC_CREAT|IPC_EXCL|0660))==-1) {
     printf("Echec creation ES file_archi\n");
     perror("ES file_archi fail");
   }
   fputc('\n',fich_cle);
 
+  /************* initialisation des Ensembles de sémaphores **************/
+
+  ushort tab[5]={0};
+  for (i=0;i<5;i++)tab[i]=3;
+
+  ushort tab2[5]={0};
+  for (i=0;i<5;i++)tab2[i]=2;  
+
+  //  printf("\x1b[32m\n");
+  
+  if((semctl(id_ens_sem_redacteurs_prio,0,SETALL,tab)) ==-1){printf("ça déconne\n");perror("semctl1:");}
+  if((semctl(id_ens_sem_files_archi,0,SETALL,tab2)) ==-1){printf("ça déconne\n");perror("semctl1:");}
+  /*  printf("val semaphore : \n");
+  if((semctl(id_ens_sem_redacteurs_prio,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+  for (i=0;i<5;i++)printf("%d |",tab[i]);
+
+  printf("\n");
+  int valeurhihi=6;
+  if((semctl(id_ens_sem_files_archi,2,SETVAL,valeurhihi)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+    if((semctl(id_ens_sem_files_archi,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+
+    for (i=0;i<5;i++)printf("%d |",tab[i]);
+  
+  
+  printf("\033[0m\n");
+  */
+
+  /***********************************************************************/
+  
     
   /* 3- Creation de la file de message                                    */
   clef_filemessage=ftok("archiviste.c",10);
@@ -302,8 +336,8 @@ int main (int argc, char *argv[]){
   }
 
     
-  fclose(fich_cle);
-
+  fclose(fich_cle);  
+  
   /**********************************************************************/
   /*                                                                    */
   /*                                                                    */
