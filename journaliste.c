@@ -27,7 +27,7 @@ void mon_sigaction(int signal, void(*f)(int)){
 /* e: theme && numero article                       */
 
 int main (int argc, char *argv[]){
-
+  printf("TEST %s & %s & %s\n",argv[1],argv[2],argv[3]);
   mon_sigaction(SIGUSR1,fin_de_journee);
 
   // pause();
@@ -76,7 +76,8 @@ int main (int argc, char *argv[]){
   
   /* Et on met son numéro dans nbarchiv_a_appeler                  */
   message->msg_type=1; //1>nbarchiv_a_appeler
-   message->operation=operation;
+
+  message->operation=operation;
   message->num_journaliste=numjournaliste;
   fprintf(stderr,"J'envoie l'operation %c avec le journaliste %d\n",message->operation,message->num_journaliste);
   switch(operation){
@@ -98,7 +99,7 @@ int main (int argc, char *argv[]){
 
     break;
     }
-  
+  printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête\n",message->num_journaliste,1); //faut pas laisser 1
   if (msgsnd(id_filemessage,message,sizeof(struct tampon),0)==-1){
     fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",nbarchiv_a_appeler);
     perror("erreur: ");
@@ -107,10 +108,26 @@ int main (int argc, char *argv[]){
   /* On attend le message à recevoir */
   while(1){
     if ((id_message=msgrcv(id_filemessage,message_recu,(sizeof(struct tampon)),getpid(),MSG_NOERROR))>0){
-      if (message_recu->operation=='c')
-	printf("Message reçu article:%s, je meurs !\n",message_recu->msg_text);
-      printf("Message reçu chez le journaliste, je meurs !\n");
-      break;
+      /* Affichage du résultat de la requête */
+      //printf("Je reçois %s.\n",message_recu->msg_text);
+      
+      switch (message_recu->operation){
+      case 'c':
+	if (strcmp(message_recu->msg_text,"ERRN")==0)
+	  printf("[Journaliste %d] La consultation a échouée, le numéro d'article %d (theme %d) n'existe pas.\n",message->num_journaliste,message->num_article,message->theme);
+	else printf("[Journaliste %d] Consultation de l'article %d [%s] (theme %d) réussie.\n",message->num_journaliste,message->num_article,message_recu->msg_text,message->theme);
+	break;
+      case 'p':
+	if (strcmp(message_recu->msg_text,"ERMA")==0)
+	  printf("[Journaliste %d] La publication a échouée, le nombre d'articles maximum pour le theme %d est atteint.\n",message->num_journaliste,message->theme);
+	else printf("[Journaliste %d] Publication de l'article %d [%s] (theme %d) réussie.\n",message->num_journaliste,message_recu->num_article,message->msg_text,message->theme);
+	break;
+      case 'e':
+	if (strcmp(message_recu->msg_text,"ERNE")==0)
+	  printf("[Journaliste %d] L'effacement a échoué, l'article %d (theme %d) n'existe pas.\n",message->num_journaliste,message->num_article,message->theme);
+	else printf("[Journaliste %d] Effacement de l'article %d (theme %d) réussi.\n",message->num_journaliste,message->num_article,message->theme);
+	}
+      break; /* On casse la boucle while */
     }
   }
   

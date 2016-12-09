@@ -91,58 +91,57 @@ int main (int argc, char *argv[]){
   printf("\n");
   /* Traitement des messages */
   while(1){
-      int indice=0;
-      int numarti=0;
+    int indice=0;
+    int numarti=0;
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
-    fprintf(stderr,"MESSAGE a recevoir\n");
+    // fprintf(stderr,"MESSAGE a recevoir\n");
     msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
-    //fprintf(stderr,"MESSAGE RECU chez archiv %d\n",numero_ordre);
     contenu=shmat(tabid_shm[message->theme],0,0);
-    fprintf(stderr,"Testinfos: %d OU %s et operation %c theme %d\n",message->num_journaliste,message->msg_text,message->operation,message->theme);
-    // fprintf(stderr,"NUM ARTICLE- %d",message->num_article);
+    // fprintf(stderr,"Testinfos: %d OU %s et operation %c theme %d\n",message->num_journaliste,message->msg_text,message->operation,message->theme);
 
     /* /!\ Ouvrir la file de message du jouraliste pour lui envoyer un message */ 
     switch(message->operation){
     case CONSULTATION: /* consulter l'article */
+      message_envoi->operation='c';
       if (message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
-	fprintf(stderr,"Numéro d'article non existant (consultation) \n");
+	printf("\t[Archiviste %d] Numéro d'article non existant (consultation)\n",numero_ordre);
 	strcpy(message_envoi->msg_text,"ERRN");
 	break;
-	}
+      }
       for (i=0;i<4;i++)
 	message_envoi->msg_text[i]=contenu[4*message->num_article+i];
-	message_envoi->operation='c';
-	printf("CONSULTATION ARTICLE %d\n",message->num_article);
+      printf("\t[Archiviste %d] Consultation de l'article %d (theme %d)\n",numero_ordre,message->num_article,message->theme);
       break;
     case PUBLICATION: /* publier l'article */
       /* verif semaphore theme */
-      printf("TEST\n");
-      
+      message_envoi->operation='p';
       while (contenu[indice]!='-' && indice<4*NB_MAX_ARTICLES){
 	indice+=4;
 	numarti++;
       }
       if(indice==4*NB_MAX_ARTICLES){
-	printf("ERREUR on peut plus publier\n");
+	strcpy(message_envoi->msg_text,"ERMA");
+	printf("\t[Archiviste %d] Nombre maximum d'aricles atteint pour le theme %d (publication).\n",numero_ordre,message->theme);
 	break;
       }
       for (i=0;i<4;i++)
 	contenu[4*numarti+i]=message->msg_text[i];
-      message_envoi->operation='p';
-      fprintf(stdout,"Article %d indice %d publié MAGUEULE %s\n",numarti,indice,contenu);
+      message_envoi->num_article=numarti;
+      printf("\t[Archiviste %d] Article %d [%s] (theme %d) publié.\n",numero_ordre,numarti,message->msg_text,message->theme);
 	    
       break;
     case EFFACEMENT: /* supprimer l'article */
       /* verif semaphore theme */
+      message_envoi->operation='e';
       if(message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
-	printf("erreur effacement impossible \n");
+	printf("\t[Archiviste %d] Effacement de l'article %d (theme %d) impossible (non existant).\n",numero_ordre,message->num_article,message->theme);
+	strcpy(message_envoi->msg_text,"ERNE");
 	break;
       }
       for (i=0;i<4;i++)
 	contenu[4*message->num_article+i]='-';
-      fprintf(stdout,"Article %d supprimé BOYAH %s \n",message->num_article,contenu);
-      message_envoi->operation='e';
+      fprintf(stdout,"\t[Archiviste %d] Article %d (theme %d) supprimé.\n",numero_ordre,message->num_article,message->theme);
       break;
     default: break;
     }
@@ -151,7 +150,9 @@ int main (int argc, char *argv[]){
     if (msgsnd(id_filemessage,message_envoi,sizeof(struct tampon),0)==-1)
 
     shmdt(&tabid_shm[message->theme]);
-    fprintf(stderr,"MESSAGE traité !!!!!!!!!\n\n");
+    printf("\n");
+    /* ON réinitialise*/
+    strcpy(message_envoi->msg_text,"NADA");
   }
 
   /* On supprime les sémaphores */

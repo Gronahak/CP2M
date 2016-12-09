@@ -387,6 +387,7 @@ int main (int argc, char *argv[]){
       char arg3[2]={'\0'};
       arg3[0]=theme;
       argexecve[3]=arg3;
+      fprintf(stdout,"TEST ARGV3 %d\n",theme);
 
       int numero_article;
 
