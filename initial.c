@@ -65,7 +65,8 @@ void arret_brutal(int s){
     printf("fich inexistant\n");
     exit(-1);
   }
-  fgets(clef_lu,50,fich_cle);
+  if (fgets(clef_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
   printf("<<<%s\n",clef_lu);
   printf(">>%d\n",id_sem);
@@ -79,7 +80,8 @@ void arret_brutal(int s){
     exit (-1);
   }
 
-  fgets(clef_lu,50,fich_cle);
+  if (fgets(clef_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
   printf("<<<%s\n",clef_lu);
   printf(">>%d\n",id_sem);
@@ -94,7 +96,8 @@ void arret_brutal(int s){
   }
 
   int id_fm;
-  fgets(clef_lu,50,fich_cle);
+  if (fgets(clef_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   id_fm=msgget(atoi(clef_lu),0);
   msgctl(id_fm,IPC_RMID,NULL);
   

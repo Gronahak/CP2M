@@ -55,14 +55,17 @@ int main (int argc, char *argv[]){
   }
 
   /* On recupere les semaphores */
-  fgets(id_lu,50,fich_cle);
+  if (fgets(id_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   //a faire
 
-  fgets(id_lu,50,fich_cle); //2e a incrementer suivant le msgrcv
+  if ( fgets(id_lu,50,fich_cle)==NULL) //2e a incrementer suivant le msgrcv
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   
   /* Recuperation de la file de message */
 
-  fgets(id_lu,50,fich_cle);
+  if (fgets(id_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   clef_filemessage=atoi(id_lu);
   if ((id_filemessage=msgget(clef_filemessage,0))==-1){
     fprintf(stderr,"Probleme dans la recuperation de la file de message chez l'archiviste n°%d.\n",numero_ordre);

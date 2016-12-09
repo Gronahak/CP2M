@@ -41,7 +41,6 @@ int main (int argc, char *argv[]){
   // struct msqid_ds * info=(struct msqid_ds*)malloc(sizeof(struct msqid_ds));
   struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon));
   struct tampon* message_recu=(struct tampon*)malloc(sizeof(struct tampon));
-  //  char * erreur;
   FILE *fich_cle;
   char id_lu[100];
   fich_cle = fopen(FICHIER_CLE,"r");
@@ -51,16 +50,19 @@ int main (int argc, char *argv[]){
   }
   
   //  erreur=
-    fgets(id_lu,50,fich_cle); //semaphores1 inutiles ici
+  if (fgets(id_lu,50,fich_cle)==NULL)
+    fprintf(stderr,"Erreur de lecture du fichier\n");
+  //semaphores1 inutiles ici
 
   /* On recupere l'ensemble 2 de semaphore */
-    //  erreur=
-    fgets(id_lu,50,fich_cle); // semaphore2 a traiter
-
+  //  erreur=
+  if (  fgets(id_lu,50,fich_cle)==NULL) // semaphore2 a traiter
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   /*Lancement file de message */
       
-    //  erreur=
-    fgets(id_lu,50,fich_cle); // archiviste
+  //  erreur=
+  if (fgets(id_lu,50,fich_cle)==NULL) // archiviste
+    fprintf(stderr,"Erreur de lecture du fichier\n");
   clef_filemessage=atoi(id_lu);
   
   if ((id_filemessage=msgget(clef_filemessage,0))==-1){ 
