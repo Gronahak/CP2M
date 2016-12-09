@@ -40,7 +40,7 @@ void modification_num_sem(int num,struct sembuf *action){
 }
 
 int main (int argc, char *argv[]){
-  srand(getpid());
+  //  srand(getpid());
   sigset_t sig;
   sigfillset(&sig);
   sigdelset(&sig,SIGUSR1);
