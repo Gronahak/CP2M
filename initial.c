@@ -137,6 +137,11 @@ void usage(const char* chaine){
 
 int main (int argc, char *argv[]){
 
+  extern int nombre_redacteurs;
+  extern int nombre_lecteurs;
+  
+  nombre_redacteurs=0;
+  nombre_lecteurs=0;
   srand(getpid());
   
   // pause();
@@ -229,17 +234,17 @@ int main (int argc, char *argv[]){
   /*                                                                    */
   /**********************************************************************/
     
-  /* 1- Creation de l'ensemble de sémaphores qui contient 5 sémaphores : */
-  /*  × 0 mutex_redacteurs                                               */
-  /*  × 1 lecture                                                        */
-  /*  × 2 ecriture                                                       */
-  /*  × 3 avant                                                          */
-  /*  × 4 nombre                                                         */
-  /* Cet ensemble de sémaphores sert à réglementer le protocole lecteur  */
-  /* rédacteurs avec priorité aux rédacteurs                             */
+  /* 1- Creation de l'ensemble de sémaphores qui contient 4+nb themes sémaphores : */
+  /*  × 0 mutex_redacteurs                                                         */
+  /*  × 1 mutex_lecture                                                            */
+  /*  × 2 mutex_avant                                                              */
+  /*  × 3 mutex_nombre                                                             */
+  /*  × 4-n autant de mutex qu'il y a de themes                                    */
+  /* Cet ensemble de sémaphores sert à réglementer le protocole lecteur            */
+  /* rédacteurs avec priorité aux rédacteurs                                       */
 
 
-  if ((id_ens_sem_redacteurs_prio=semget(cle_sem_R_P,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
+  if ((id_ens_sem_redacteurs_prio=semget(cle_sem_R_P,4+nb_themes,IPC_CREAT|IPC_EXCL|0660))==-1) {
     printf("Echec creation ES redacteurs prio\n");
     perror("ES redacteurs_prio fail");
   }
@@ -283,13 +288,18 @@ int main (int argc, char *argv[]){
 
   /************* initialisation des Ensembles de sémaphores **************/
 
-  ushort tab[5]={0};
-  for (i=0;i<5;i++)tab[i]=3;
-
+  printf("DEBUUUUG1\n");
+  ushort *tab;
+  tab = (ushort*)malloc((4+nb_themes)*sizeof(ushort));
+  if (tab==NULL){printf("Y'a plus de memoiren abandonnez le navire.\n") ;exit(-1);}
+  for (i=0;i<4+nb_themes;i++)tab[i]=1;
   ushort tab2[NB_MAX_JOURNALISTES]={0};
+
+  printf("DEBUUUUG2\n");
   for (i=0;i<NB_MAX_JOURNALISTES;i++)tab2[i]=0;
   tab2[0]=1;
 
+  printf("DEBUUUUG3\n");
   //  printf("\x1b[32m\n");
   
   if((semctl(id_ens_sem_redacteurs_prio,0,SETALL,tab)) ==-1){printf("ça déconne\n");perror("semctl1:");}
@@ -310,7 +320,6 @@ int main (int argc, char *argv[]){
   */
 
   /***********************************************************************/
-  
     
   /* 3- Creation de la file de message                                    */
   clef_filemessage=ftok("archiviste.c",10);
