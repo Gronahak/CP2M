@@ -158,7 +158,7 @@ int main (int argc, char *argv[]){
     }
 
   }
-  printf("  Je suis le journaliste %d et j'ai choisi le guichet %d car il n'y a que %d journalistes dans cette file.\n",getpid(),bon_guichet,taille_des_files[bon_guichet]);
+  printf("Je suis le journaliste %d et j'ai choisi le guichet %d car il n'y a que %d journalistes dans cette file.\n",getpid(),bon_guichet,taille_des_files[bon_guichet]);
  
   struct sembuf V2;
   V2.sem_num=bon_guichet;
@@ -172,26 +172,26 @@ int main (int argc, char *argv[]){
   message->msg_type=bon_guichet; 
   message->operation=operation;
   message->num_journaliste=numjournaliste;
-  
-  fprintf(stderr,"J'envoie l'operation %c avec le journaliste %d\n",message->operation,message->num_journaliste);
 
   /* On recupere les parametres selon l'operation */
   switch(operation){
   case CONSULTATION:
     message->theme=atoi(argv[3]);
     message->num_article=atoi(argv[4]);
+    printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête (consultation article %d theme %d)\n",message->num_journaliste,bon_guichet,message->num_article,message->theme);
     break;
   case EFFACEMENT:
     message->theme=atoi(argv[3]);
     message->num_article=atoi(argv[4]);
+    printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête (effacement article %d theme %d)\n",message->num_journaliste,bon_guichet,message->num_article,message->theme);
     break;
   case PUBLICATION:
     message->theme=atoi(argv[3]);
     strcpy(message->msg_text,argv[4]);
+    printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête (publier [%s] dans le theme %d)\n",message->num_journaliste,bon_guichet,message->msg_text,message->theme);
     break;
   }
   
-  printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête\n",message->num_journaliste,bon_guichet);
   /* Le Journaliste envoie sa requete au bon archiviste */
   if (msgsnd(id_filemessage,message,sizeof(struct tampon),0)==-1){
     fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",bon_guichet);

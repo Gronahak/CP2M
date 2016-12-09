@@ -34,7 +34,8 @@ void mon_sigaction(int signal, void(*f)(int)){
 /*      -numero d'ordre     */
 /*      -nb_themes          */
 
-void modification_num_sem(int num,struct sembuf *action){ // Fonction pour modifier le numéro du sémaphore que l'on veut modifier (<num>) quand on veut faire une action P ou Z (<action>)
+void modification_num_sem(int num,struct sembuf *action){
+  /* Fonction pour modifier le numéro du sémaphore que l'on veut modifier (<num>) quand on veut faire une action P ou Z (<action>) */
   action->sem_num=num;
 }
 
@@ -80,13 +81,6 @@ int main (int argc, char *argv[]){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore propre à l'execution chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);
   }
-  //  printf("\x1b[32m\n");
-
-
-  // printf("\n");
-  //  int valeurhihi=6;
-  
-  
   
   /*    2) ensemble de semaphores des files d'attentes archivistes (Cet ensemble de sémaphores contient un sémaphore pour chaque archiviste dont la valeur indique la taille de la file d'attente au guichet de cet archiviste) */
   if(fgets(id_lu,50,fich_cle)==NULL)
@@ -96,19 +90,9 @@ int main (int argc, char *argv[]){
     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);
     exit(-1);}
  
-  // printf("\n");
-
   taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
-
-  
-  // printf("[[[[[[[[[[[[[[[%d |",taille_de_la_file);
-  //  printf("\n");
-
   printf("\033[0m\n");
 
- 
-
-  
   /* Recuperation de la file de message */
 
   if (fgets(id_lu,50,fich_cle)==NULL)
@@ -122,8 +106,7 @@ int main (int argc, char *argv[]){
   i=0;
   while (fgets(id_lu,50,fich_cle)){ // On passe tous les id des shm des themes
     tabclef_shm[i]=atoi(id_lu);
-    //fprintf(stdout,"test de connard %d %d %d\n",tabclef_shm[i],atoi(id_lu),i);
-    if ((tabid_shm[i]=shmget(tabclef_shm[i],NB_MAX_ARTICLES*4,0))==-1){ /* J'ai mis 50 mais j'aurai très bien pu mettre 51 */
+    if ((tabid_shm[i]=shmget(tabclef_shm[i],NB_MAX_ARTICLES*4,0))==-1){ 
       fprintf(stderr,"Probleme dans la recuperation du segment de mémoire partagée du thème n°%d [archiviste n°%d].\n",i,numero_ordre);
       perror("erreur: ");
       exit(-1);
@@ -134,22 +117,19 @@ int main (int argc, char *argv[]){
 
   fclose(fich_cle);
   printf("\n");
-
-
   
   /* Traitement des messages */
   while(1){
     sleep(rand()%6);
     int indice=0;
     int numarti=0;
+    
     /* Recuperation du message et traitement */
     /* Si vide ==> bloque jusqu'à un nouveau message */
-    // fprintf(stderr,"MESSAGE a recevoir\n");
+    
     msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
     contenu=shmat(tabid_shm[message->theme],0,0);
-    // fprintf(stderr,"Testinfos: %d OU %s et operation %c theme %d\n",message->num_journaliste,message->msg_text,message->operation,message->theme);
-
-    /* /!\ Ouvrir la file de message du journaliste pour lui envoyer un message */ 
+    
     switch(message->operation){
     case CONSULTATION: /* consulter l'article  */
 
@@ -187,13 +167,16 @@ int main (int argc, char *argv[]){
       modification_num_sem(2,&V);
       if((semop(id_sem_R_P,&V,1))==-1){printf("mutex (AVANT) pas rendu\n");perror("mutex Avant impossible  a rendre");}
 
-      //// Lecture du fichier
+      // Lecture du fichier   
+      
       message_envoi->operation='c';
+      /* On verifie si on peut consulter l'article demandé */
       if (message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
 	printf("\t[Archiviste %d] Numéro d'article non existant (consultation)\n",numero_ordre);
 	strcpy(message_envoi->msg_text,"ERRN");
       }
       else{
+	/* On recopie l'article dans le message qu'on enverra au journaliste */
 	for (i=0;i<4;i++)
 	  message_envoi->msg_text[i]=contenu[4*message->num_article+i];
 	printf("\t[Archiviste %d] Consultation de l'article %d (theme %d)\n",numero_ordre,message->num_article,message->theme);
@@ -234,10 +217,8 @@ int main (int argc, char *argv[]){
 	//// Prendre le sémaphore (lecture) qui est le 1er:
 
 	modification_num_sem(1,&P);      
-	printf("RECEPTION______________%d_____\n",P.sem_num);
 
 	//	if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (LECTURE)occupé\n");perror("mutex (LECTURE) occupé");}
-	printf("RECEPTION___________________\n");
 
       }
 
@@ -251,18 +232,20 @@ int main (int argc, char *argv[]){
 	
       //Ecriture    SECTION CRITIQUE
 
-      
       message_envoi->operation='p';
+      /* Je cherche ou publier, - etant "rien" */
       while (contenu[indice]!='-' && indice<4*NB_MAX_ARTICLES){
 	indice+=4;
 	numarti++;
       }
+      /* Je vérifie si c'est possible */
       if(indice==4*NB_MAX_ARTICLES){
 	strcpy(message_envoi->msg_text,"ERMA");
 	printf("\t[Archiviste %d] Nombre maximum d'aricles atteint pour le theme %d (publication).\n",numero_ordre,message->theme);
        
       }
       else {
+	/* Je recopie (publie) l'article envoyé */
 	for (i=0;i<4;i++)
 	  contenu[4*numarti+i]=message->msg_text[i];
 	message_envoi->num_article=numarti;
@@ -322,16 +305,22 @@ int main (int argc, char *argv[]){
       if((semop(id_sem_R_P,&P,1))==-1){printf("mutex (theme n)occupé\n");perror("mutex (theme n) occupé");}
 	
       //Ecriture      SECTION CRITIQUE
+
+      
       message_envoi->operation='e';
+      /* On verifie si on peut effacer l'article */
       if(message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
 	printf("\t[Archiviste %d] Effacement de l'article %d (theme %d) impossible (non existant).\n",numero_ordre,message->num_article,message->theme);
 	strcpy(message_envoi->msg_text,"ERNE");
       }
       else{
+	/* On l'efface dans le SHM (remplace par -) */
 	for (i=0;i<4;i++)
 	  contenu[4*message->num_article+i]='-';
 	fprintf(stdout,"\t[Archiviste %d] Article %d (theme %d) supprimé.\n",numero_ordre,message->num_article,message->theme);
       }
+
+      
       //Fin ecriture    FIN SECTION CRITIQUE
 
       
@@ -358,16 +347,15 @@ int main (int argc, char *argv[]){
 
       break;
       
-    default: break;
+    default: break; /* Cas impossible */
     }
     /* On previent le journaliste de l'action */
+    
     message_envoi->msg_type=message->num_journaliste;
     if (msgsnd(id_filemessage,message_envoi,sizeof(struct tampon),0)==-1)
-
       shmdt(&contenu);
     printf("\n");
 
-    
     taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
 
     //// prendre mutex file
@@ -395,8 +383,6 @@ int main (int argc, char *argv[]){
     modification_num_sem(0,&V);
     if((semop(id_sem_F,&V,1))==-1){printf("mutex pas rendu\n");perror("muteximpossible a rendre");}
   
-  
-    //  printf("[[[[[[[[[[[[[[[%d |",taille_de_la_file);
     /* ON réinitialise*/
     strcpy(message_envoi->msg_text,"NADA");
   }
