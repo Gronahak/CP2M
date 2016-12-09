@@ -182,11 +182,9 @@ int main (int argc, char *argv[]){
   char cle_sem_file_chaine[100]={'\0'};
 
   char clef_filemess[100]={'\0'};
-  //  char nb_themes_chaine[5]={'\0'};
   int clef_filemessage,id_filemessage;
   int id_ens_sem_redacteurs_prio;
-  int id_ens_sem_files_archi;
-  //  struct sembuf V={0,+1,SEM_UNDO};    
+  int id_ens_sem_files_archi;    
 
   int id_smp;
   
@@ -429,8 +427,6 @@ int main (int argc, char *argv[]){
 	  
       }
       execve("./journaliste",argexecve,NULL);
-	  
-      // exit(-1);
     }
       tableau_pid_journalistes[indice_tab_j%NB_MAX_JOURNALISTES]=p;
       indice_tab_j++;

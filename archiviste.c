@@ -64,6 +64,8 @@ int main (int argc, char *argv[]){
 
   numero_ordre=atoi(argv[1]);
   nb_themes=atoi(argv[2]);
+
+  srand(getpid());
   
   /* Masquage des signaux qui stoppent l'archiviste */
 
@@ -92,7 +94,6 @@ int main (int argc, char *argv[]){
     exit(-1);}
  
   taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
-  printf("\033[0m\n");
 
   /* Recuperation de la file de message */
 
@@ -117,12 +118,10 @@ int main (int argc, char *argv[]){
   nb_shm=i;
 
   fclose(fich_cle);
-  printf("\n");
   
   /* Traitement des messages */
   while(1){
     sleep(rand()%4+4);
-
     int indice=0;
     int numarti=0;
     
