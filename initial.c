@@ -147,6 +147,7 @@ int main (int argc, char *argv[]){
 
   int id_smp;
   
+  
   int i;
   pid_t p;
 
@@ -188,7 +189,8 @@ int main (int argc, char *argv[]){
     fputs(cle_sem_chaine,fich_cle);
     fputc('\n',fich_cle);
 
-    
+    printf("\tcle de l'es redac prio : %xd \n",cle_sem);
+
 
     /**********************************************************************/
   /*                                                                    */
@@ -241,6 +243,7 @@ int main (int argc, char *argv[]){
     cle_sem = ftok(FICHIER_CLE,LETTRE_CODE+1);
     sprintf(cle_sem_chaine,"%d",cle_sem);
     fputs(cle_sem_chaine,fich_cle);
+    printf("\tcle de l'es taille des files : %xd \n",cle_sem);
     if ((id_ens_sem_files_archi=semget(cle_sem,5,IPC_CREAT|IPC_EXCL|0660))==-1) {
       printf("Echec creation ES file_archi\n");
       perror("ES file_archi fail");
@@ -254,7 +257,7 @@ int main (int argc, char *argv[]){
       fprintf(stderr,"Probleme dans la création de la file de message.\n");
       exit(-1);
     }
-
+    printf("\tcle de la fm: %xd\n",clef_filemessage);
     sprintf(clef_filemess,"%d",clef_filemessage);
     fputs(clef_filemess,fich_cle);
     fputc('\n',fich_cle);
@@ -269,7 +272,7 @@ int main (int argc, char *argv[]){
 	printf("Création du segment de mémoire partagée impossible\n");
 	exit(1);
       }
-      printf("%xd\n",cle_smp);
+      printf("\tcle du smp %d : %xd\n",i,cle_smp);
       sprintf(cle_smp_chaine,"%d",cle_smp);
       fputs(cle_smp_chaine,fich_cle);
       fputc('\n',fich_cle);
@@ -378,7 +381,7 @@ int main (int argc, char *argv[]){
 	  
 	  
 	}
-	  	execve("./journaliste",argexecve,NULL);
+	  //	execve("./journaliste",argexecve,NULL);
 	exit(-1);
       }
 }
