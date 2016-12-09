@@ -54,7 +54,7 @@ void arret_brutal(int s){
   }
 
   printf("\n");
-  //animation_coup_de_balai();
+  animation_coup_de_balai();
   FILE *fich_cle;
   char clef_lu[50];
   int id_sem;
@@ -412,9 +412,9 @@ int main (int argc, char *argv[]){
     rand_requete=rand()%10+1;
 
     categorie_requete=EFFACEMENT;
-    if (rand_requete>2)  //1
+    if (rand_requete>1)  //1
       categorie_requete=PUBLICATION;
-    if (rand_requete>8)  //3
+    if (rand_requete>3)  //3
       categorie_requete=CONSULTATION;
 
     printf("dont la catégorie est: %c||%d\n",categorie_requete,rand_requete);
