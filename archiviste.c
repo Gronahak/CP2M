@@ -43,8 +43,17 @@ int main (int argc, char *argv[]){
   char* contenu;
   FILE * fich_cle;
   char id_lu[50];
-
+  struct sembuf P={0,-1,SEM_UNDO};
+  struct sembuf V={0,+1,SEM_UNDO};    
   
+
+
+  int  taille_de_la_file=0;
+  /*
+  int *taille_des_files;
+  taille_des_files=(int *)malloc((1+nb_archiviste)*sizeof(int));
+  if (taille_des_files==NULL){ printf("Echec du malloc plus de memoire.\n"); exit(-1);}
+  */
   ushort tab[5]={0};
   for (i=0;i<5;i++)tab[i]=0;
   
@@ -85,16 +94,18 @@ int main (int argc, char *argv[]){
   fgets(id_lu,50,fich_cle);
   clef_sem_files=atoi(id_lu);
   if ((id_sem_F=semget(clef_sem_files,0,0))==-1){
-     fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);
-     exit(-1);}
-    if((semctl(id_sem_F,5,GETALL,tab)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
+    fprintf(stderr,"Probleme dans la recuperation du sémaphore de gestion des files chez l'archiviste n°%d.\n",numero_ordre);
+    exit(-1);}
+ 
+  printf("\n");
 
-        printf("\n");
+    taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
 
-    for (i=0;i<=numero_ordre;i++)printf("%d |",tab[i]);
-    printf("\n");
+  
+  printf("[[[[[[[[[[[[[[[%d |",taille_de_la_file);
+  printf("\n");
 
-    printf("\033[0m\n");
+  printf("\033[0m\n");
 
  
 
@@ -188,6 +199,20 @@ int main (int argc, char *argv[]){
 
     shmdt(&contenu);
     printf("\n");
+
+    
+    taille_de_la_file=semctl(id_sem_F,numero_ordre,GETVAL);
+
+      //// prendre mutex
+
+  if((semop(id_sem_F,&P,1))==-1){printf("mutex occupé\n");perror("mutex files occupé");}
+
+
+  //// rendre mutex
+   if((semop(id_sem_F,&V,1))==-1){printf("mutex pas rendu\n");perror("muteximpossible a rendre");}
+  
+  
+  printf("[[[[[[[[[[[[[[[%d |",taille_de_la_file);
     /* ON réinitialise*/
     strcpy(message_envoi->msg_text,"NADA");
   }

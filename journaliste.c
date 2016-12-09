@@ -141,14 +141,7 @@ int main (int argc, char *argv[]){
   fclose(fich_cle);
   /* On cherche quel archiviste a le moins de message dans sa file avec les semaphores */
   //// prendre mutex
-  //int tab_test[5];
-  /*
-  for (i=0;i<5;i++)tab_test[i]=0;
-  if((semctl(id_sem_F,5,GETALL,tab_test)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-  printf("TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST\n");
-  for (i=0;i<5;i++)printf("%d|",tab_test[i]);
-  printf("TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST\n");
-  */
+
   
   if((semop(id_sem_F,&P,1))==-1){printf("mutex occupé\n");perror("mutex files occupé");}
   bon_guichet=0;
@@ -159,49 +152,18 @@ int main (int argc, char *argv[]){
       
       file_la_plus_courte=taille_des_files[i];
     }
-    //  printf("\n\nATTENTION LES YEUX %d file la + courte : %d\n\n",taille_des_files[i],file_la_plus_courte);
 
   }
   printf("  Je suis le journaliste %d et j'ai choisi le guichet %d car il n'y a que %d journalistes dans cette file.\n",getpid(),bon_guichet,taille_des_files[bon_guichet]);
-  /* test */
-  
-  /* test */
-  // printf("BONGUICHET NTM NTM NTM BONGUICHET NTM NTM NTMBONGUICHET NTM NTM NTMBONGUICHET NTM NTM NTM%d\n",bon_guichet);
-  struct sembuf V2;//{0,1,SEM_UNDO};
+ 
+  struct sembuf V2;
   V2.sem_num=bon_guichet;
-  V2.sem_op=1;//+taille_des_files[bon_guichet];
+  V2.sem_op=1;
   V2.sem_flg=0;
-  //  semop(id_sem_F,&V2,0);
     semop(id_sem_F,&V2,1);
-    /*
-  printf("AAAAAAAAAA\n");
-    for (i=0;i<5;i++)tab_test[i]=0;
-    if((okok=(semctl(id_sem_F,0,GETVAL,okok))) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-   //  for (i=0;i<=nb_archiviste;i++)printf("%d |",tab_test[i])
-    
-   if((semctl(id_sem_F,1,GETVAL,okok)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-   
-
-   if((semctl(id_sem_F,2,GETVAL,okok)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-
-   printf("%d",okok);
-    */
-
-    //printf("BBBBBBBBB\n");  
   //// rendre mutex
    if((semop(id_sem_F,&V,1))==-1){printf("mutex pas rendu\n");perror("muteximpossible a rendre");}
-   // else {printf("\t\tmutex rendu !!\n");}
-
-  // int tab_test[5];
-   /*
-  for (i=0;i<5;i++)tab_test[i]=0;
-  if((semctl(id_sem_F,5,GETALL,tab_test)) ==-1){printf("ça déconne2\n");perror("semctl2:");}
-  printf("TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST\n");
-  for (i=0;i<5;i++)printf("%d|",tab_test[i]);
-  printf("TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST\n");
-   */
-  /* Et on met son numéro dans nbarchiv_a_appeler                  */
-  message->msg_type=bon_guichet; //1>nbarchiv_a_appeler
+  message->msg_type=bon_guichet; 
 
   message->operation=operation;
   message->num_journaliste=numjournaliste;
