@@ -6,6 +6,19 @@
 
 # include "types.h"
 
+
+void fin_de_journee(int s){
+  printf("L'archiviste de pid [%d] reçoit le signal %d et rentre chez lui.",getpid(),s);
+  exit (-1);
+}
+
+void mon_sigaction(int signal, void(*f)(int)){
+  struct sigaction action;
+  action.sa_handler=f;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags=0;
+  sigaction(signal,&action,NULL);
+}
 /* Quatres arguments:                               */
 /*      -nombre d'archivistes                       */
 /*      -operation (c,p,e) +2autres/operation       */
@@ -15,6 +28,9 @@
 
 int main (int argc, char *argv[]){
 
+  mon_sigaction(SIGUSR1,fin_de_journee);
+
+  pause();
   int  clef_filemessage,id_filemessage;
   // int nb_archiviste=atoi(argv[1]);
   char operation=argv[2][0];

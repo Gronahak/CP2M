@@ -16,6 +16,7 @@
 
 #define LETTRE_CODE 'a'
 #define NB_MAX_ARTICLES 100
+#define NB_MAX_JOURNALISTES 1000
 
 #define EFFACEMENT 'e'
 #define PUBLICATION 'p'

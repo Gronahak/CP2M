@@ -13,16 +13,19 @@ int tabid_shm[100];
 int nb_shm;
 int id_filemessage;
 
-void handler1(int signum){
-  int i;
-  /*
-  for(i=0;i<nb_shm;i++){
-    shmctl(tabclef_shm[i],IPC_RMID,NULL);
-    printf("EH\n");
-  }
-  */
-  exit(-1);
+void fin_de_journee(int s){
+  printf("L'archiviste de pid [%d] reçoit le signal %d et rentre chez lui.",getpid(),s);
+  exit (-1);
 }
+
+void mon_sigaction(int signal, void(*f)(int)){
+  struct sigaction action;
+  action.sa_handler=f;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags=0;
+  sigaction(signal,&action,NULL);
+}
+
 
 
 /* Deux arguments:          */
@@ -30,11 +33,10 @@ void handler1(int signum){
 /*      -nb_themes          */
 
 int main (int argc, char *argv[]){
-
-  int i, clef_filemessage,id_message,id_journa;
+  
+  mon_sigaction(SIGUSR1,fin_de_journee);
+  int i, clef_filemessage,id_message, clef_journa,id_journa;
   struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon)),messageenvoi;
-  struct sigaction new;
-  sigset_t ens,ensvide;
   char* contenu[4],tmp[4];
   FILE * fich_cle;
   char id_lu[50];
@@ -43,13 +45,7 @@ int main (int argc, char *argv[]){
   fprintf(stderr,"test nbtheme %d num ordre %d\n",nb_themes,numero_ordre);
   /* Captage des signaux qui stoppent l'archiviste */
 
-  new.sa_handler=handler1;
-  new.sa_flags=0;
-  sigemptyset(&new.sa_mask);
-  sigemptyset(&ens);
-  sigemptyset(&ensvide);
-  sigaddset(&ens,SIGUSR1);
-  sigaction(SIGINT,&new,NULL);
+
 
   fich_cle = fopen(FICHIER_CLE,"r");
   if (fich_cle==NULL){
