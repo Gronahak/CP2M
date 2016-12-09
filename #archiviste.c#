@@ -96,6 +96,7 @@ int main (int argc, char *argv[]){
     /* Si vide > bloque jusqu'à un nouveau message */
         fprintf(stderr,"MESSAGE a recevoir\n");
 	id_message=msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
+    fprintf
     fprintf(stderr,"MESSAGE RECU chez archiv %d\n",numero_ordre);
     *contenu=shmat(tabid_shm[message->theme],NULL,0);
     fprintf(stderr,"MESSAGE traité ????? ET:%d\n",message->num_journaliste);
