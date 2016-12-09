@@ -1,6 +1,8 @@
 #include "types.h"
 
-void animation_coup_de_balai(){ /* Afficher le coup de balai (fonction purement cosmétique) */
+void animation_coup_de_balai(){
+  /* Afficher le coup de balai (fonction purement cosmétique) */
+  
   int i=0;
   int k=0;
   fflush(stdout);
@@ -45,26 +47,29 @@ void arret_brutal(int s){
   int i;
   /* Eradication des archivistes et journalistes qui se balladent :*/
   for (i=0;i<NB_MAX_JOURNALISTES;i++){
-    //    printf("j%d : %d\n",i,tableau_pid_journalistes[i]);
-    if (tableau_pid_journalistes[i]!=0) kill(tableau_pid_journalistes[i],SIGUSR1);
+    if (tableau_pid_journalistes[i]!=0)  kill(tableau_pid_journalistes[i],SIGUSR1);
+    
   }
   for (i=0;i<indice_tab_a;i++){
      kill(tableau_pid_archivistes[i],SIGUSR1);
-     //printf("a%d : %d\n",i,tableau_pid_archivistes[i]);
   }
-
   printf("\n");
-  animation_coup_de_balai();
+  sleep(1);
+
+  /* On ré-ouvre le fichier pour détruire les IPC créés */
   FILE *fich_cle;
   char clef_lu[50];
   int id_sem;
   printf("Coup de balai dans les IPC.\n");
+  animation_coup_de_balai();
   
   fich_cle = fopen(FICHIER_CLE,"r");
   if (fich_cle==NULL){
     printf("fich inexistant\n");
     exit(-1);
   }
+
+  /* 1ere ligne de semaphores */
   if (fgets(clef_lu,50,fich_cle)==NULL)
     fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
@@ -80,6 +85,7 @@ void arret_brutal(int s){
     exit (-1);
   }
 
+  /* 2eme ligne de semaphores */
   if (fgets(clef_lu,50,fich_cle)==NULL)
     fprintf(stderr,"Erreur de lecture du fichier\n");
   id_sem=atoi(clef_lu);
@@ -95,13 +101,15 @@ void arret_brutal(int s){
     exit (-1);
   }
 
+  /* 3e ligne file de message */
   int id_fm;
   if (fgets(clef_lu,50,fich_cle)==NULL)
     fprintf(stderr,"Erreur de lecture du fichier\n");
   id_fm=msgget(atoi(clef_lu),0);
   msgctl(id_fm,IPC_RMID,NULL);
   
-  
+
+  /* Tout le reste sont les segments de memoire partagée par thème */
   int id_shm;
   while(fgets(clef_lu,50,fich_cle)){
     printf("<<<<<<<%s\n",clef_lu);
@@ -144,11 +152,13 @@ int main (int argc, char *argv[]){
   nombre_lecteurs=0;
 
   srand(getpid());
-  // pause();
+  
   if (argc!=3){
     usage(argv[0]);
     exit(-1);
   }
+
+  /* On recupere les paramètres */
   int nb_archivistes=atoi(argv[1]);
   int nb_themes=atoi(argv[2]);
   
@@ -157,13 +167,16 @@ int main (int argc, char *argv[]){
     exit(-1);
   }
 
+  /* Ces signaux arrêtent tous les processus */
   mon_sigaction(SIGINT,arret_brutal);
   mon_sigaction(SIGUSR1,arret_brutal);
   mon_sigaction(SIGUSR2,arret_brutal);
   mon_sigaction(SIGTERM,arret_brutal);
   mon_sigaction(SIGSTOP,arret_brutal);
   mon_sigaction(SIGHUP,arret_brutal);
-
+  mon_sigaction(SIGTSTP,arret_brutal);
+  
+  /* Variables des IPC */
   key_t cle_sem_R_P,cle_sem_file;
   key_t cle_smp;
   FILE *fich_cle;

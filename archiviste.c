@@ -16,7 +16,7 @@ extern int nombre_redacteurs;
 extern int nombre_lecteurs;
 
 void fin_de_journee(int s){
-  printf("L'archiviste de pid [%d] reçoit le signal %d et rentre chez lui.",getpid(),s);
+  printf("L'archiviste de pid [%d] reçoit le signal %d et rentre chez lui.\n",getpid(),s);
   exit (-1);
 }
 
@@ -39,7 +39,11 @@ void modification_num_sem(int num,struct sembuf *action){
 }
 
 int main (int argc, char *argv[]){
-
+  sigset_t sig;
+  sigfillset(&sig);
+  sigdelset(&sig,SIGUSR1);
+  sigprocmask(SIG_BLOCK,&sig,NULL);
+  
   mon_sigaction(SIGUSR1,fin_de_journee);
 
   int i, clef_filemessage,clef_sem_redac_prio,clef_sem_files;
