@@ -27,7 +27,6 @@ void mon_sigaction(int signal, void(*f)(int)){
 /* e: theme && numero article                       */
 
 int main (int argc, char *argv[]){
-  printf("TEST %s & %s & %s\n",argv[1],argv[2],argv[3]);
   mon_sigaction(SIGUSR1,fin_de_journee);
 
   // pause();
@@ -210,7 +209,7 @@ int main (int argc, char *argv[]){
   switch(operation){
   case CONSULTATION:
     //fprintf(stderr,"test entree: %d %d\n",atoi(argv[3]),atoi(argv[4]));
-     message->theme=atoi(argv[3]);
+    message->theme=atoi(argv[3]);
     message->num_article=atoi(argv[4]);
     break;
   case EFFACEMENT:
@@ -226,9 +225,9 @@ int main (int argc, char *argv[]){
 
     break;
     }
-  printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête\n",message->num_journaliste,1); //faut pas laisser 1
+  printf("[Journaliste %d] demande à l'archiviste %d de traiter sa requête\n",message->num_journaliste,bon_guichet); //faut pas laisser 1
   if (msgsnd(id_filemessage,message,sizeof(struct tampon),0)==-1){
-    fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",nbarchiv_a_appeler);
+    fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",bon_guichet);
     perror("erreur: ");
   }
     

@@ -186,7 +186,7 @@ int main (int argc, char *argv[]){
     message_envoi->msg_type=message->num_journaliste;
     if (msgsnd(id_filemessage,message_envoi,sizeof(struct tampon),0)==-1)
 
-    shmdt(&tabid_shm[message->theme]);
+    shmdt(&contenu);
     printf("\n");
     /* ON réinitialise*/
     strcpy(message_envoi->msg_text,"NADA");
