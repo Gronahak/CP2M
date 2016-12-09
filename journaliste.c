@@ -30,19 +30,20 @@ int main (int argc, char *argv[]){
 
   mon_sigaction(SIGUSR1,fin_de_journee);
 
-  pause();
+  // pause();
   int  clef_filemessage,id_filemessage;
   // int nb_archiviste=atoi(argv[1]);
   char operation=argv[2][0];
   int numjournaliste=getpid(); // Ou un param ?
   int nbarchiv_a_appeler=0;
+  int id_message;
   // int tmp;
   // struct msqid_ds * info=(struct msqid_ds*)malloc(sizeof(struct msqid_ds));
   struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon));
+  struct tampon* message_recu=(struct tampon*)malloc(sizeof(struct tampon));
   //  char * erreur;
   FILE *fich_cle;
   char id_lu[100];
-  int i;
   fich_cle = fopen(FICHIER_CLE,"r");
   if (fich_cle==NULL){
     printf("Fichier inexistant\n");
@@ -73,22 +74,22 @@ int main (int argc, char *argv[]){
   
   /* Et on met son numéro dans nbarchiv_a_appeler                  */
   message->msg_type=1; //1>nbarchiv_a_appeler
-  message->operation=operation;
+   message->operation=operation;
   message->num_journaliste=numjournaliste;
-  fprintf(stderr,"J'envoie l'operation %c avec le journaliste %ld\n",message->operation,message->num_journaliste);
+  fprintf(stderr,"J'envoie l'operation %c avec le journaliste %d\n",message->operation,message->num_journaliste);
   switch(operation){
   case CONSULTATION:
-    fprintf(stderr,"test entree: %d %d\n",atoi(argv[3]),atoi(argv[4]));
-    message->theme=atoi(argv[3]);
+    //fprintf(stderr,"test entree: %d %d\n",atoi(argv[3]),atoi(argv[4]));
+     message->theme=atoi(argv[3]);
     message->num_article=atoi(argv[4]);
     break;
   case EFFACEMENT:
-    fprintf(stderr,"test entree: %d %d\n",atoi(argv[3]),atoi(argv[4]));
+    // fprintf(stderr,"test entree: %d %d\n",atoi(argv[3]),atoi(argv[4]));
     message->theme=atoi(argv[3]);
     message->num_article=atoi(argv[4]);
     break;
   case PUBLICATION:
-    fprintf(stderr,"test entree: %d %s\n",atoi(argv[3]),argv[4]);
+    //fprintf(stderr,"test entree: %d %s\n",atoi(argv[3]),argv[4]);
     message->theme=atoi(argv[3]);
     strcpy(message->msg_text,argv[4]);
     fprintf(stderr,"entree char : %s ET  %s\n",message->msg_text,argv[4]);
@@ -96,18 +97,20 @@ int main (int argc, char *argv[]){
     break;
     }
   
-  if (msgsnd(id_filemessage,message,1,IPC_NOWAIT)==-1){
+  if (msgsnd(id_filemessage,message,sizeof(struct tampon),0)==-1){
     fprintf(stderr,"Erreur d'envoi d'un message à l'archiviste %d.\n",nbarchiv_a_appeler);
     perror("erreur: ");
   }
     
   /* On attend le message à recevoir */
-  //while(1)
-    //  msgrcv
-    //  break; 
-  /* On supprime tous les IPC */
+  while(1){
+    if ((id_message=msgrcv(id_filemessage,message_recu,(sizeof(struct tampon)),getpid(),MSG_NOERROR))>0){
+      if (message_recu->operation=='c')
+	printf("Message reçu article:%s, je meurs !\n",message_recu->msg_text);
+      printf("Message reçu chez le journaliste, je meurs !\n");
+      break;
+    }
+  }
   
-  //msgctl(id_filemessage,IPC_RMID,NULL);
-  //ctl des semaphores
   exit(0);
 }

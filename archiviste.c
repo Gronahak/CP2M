@@ -35,9 +35,10 @@ void mon_sigaction(int signal, void(*f)(int)){
 int main (int argc, char *argv[]){
   
   mon_sigaction(SIGUSR1,fin_de_journee);
-  int i, clef_filemessage,id_message, clef_journa,id_journa;
-  struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon)),messageenvoi;
-  char* contenu[4],tmp[4];
+  int i, clef_filemessage;
+  struct tampon* message=(struct tampon*)malloc(sizeof(struct tampon));
+  struct tampon* message_envoi=(struct tampon*)malloc(sizeof(struct tampon));
+  char* contenu;
   FILE * fich_cle;
   char id_lu[50];
   nb_themes=atoi(argv[2]);
@@ -84,42 +85,70 @@ int main (int argc, char *argv[]){
 
   
   fclose(fich_cle);
-
-  
+  printf("\n");
   /* Traitement des messages */
   while(1){
+      int indice=0;
+      int numarti=0;
     /* Recuperation du message et traitement */
     /* Si vide > bloque jusqu'à un nouveau message */
-        fprintf(stderr,"MESSAGE a recevoir\n");
-	id_message=msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
-    fprintf(stderr,"MESSAGE RECU chez archiv %d\n",numero_ordre);
-    *contenu=shmat(tabid_shm[message->theme],NULL,0);
-    fprintf(stderr,"MESSAGE traité ????? ET:%d\n",message->num_journaliste);
-    //strcpy(tmp,message.msg_text);
+    fprintf(stderr,"MESSAGE a recevoir\n");
+    msgrcv(id_filemessage,message,sizeof(struct tampon),numero_ordre,MSG_NOERROR);
+    //fprintf(stderr,"MESSAGE RECU chez archiv %d\n",numero_ordre);
+    contenu=shmat(tabid_shm[message->theme],0,0);
+    fprintf(stderr,"Testinfos: %d OU %s et operation %c theme %d\n",message->num_journaliste,message->msg_text,message->operation,message->theme);
+    // fprintf(stderr,"NUM ARTICLE- %d",message->num_article);
 
     /* /!\ Ouvrir la file de message du jouraliste pour lui envoyer un message */ 
     switch(message->operation){
     case CONSULTATION: /* consulter l'article */
-      /* envoie un message avec le contenu */
+      if (message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
+	fprintf(stderr,"Numéro d'article non existant (consultation) \n");
+	strcpy(message_envoi->msg_text,"ERRN");
+	break;
+	}
+      for (i=0;i<4;i++)
+	message_envoi->msg_text[i]=contenu[4*message->num_article+i];
+	message_envoi->operation='c';
+	printf("CONSULTATION ARTICLE %d\n",message->num_article);
       break;
     case PUBLICATION: /* publier l'article */
       /* verif semaphore theme */
-      strcat(*contenu,tmp);
-      fprintf(stdout,"Article publié MAGUEULE\n");
+      printf("TEST\n");
+      
+      while (contenu[indice]!='-' && indice<4*NB_MAX_ARTICLES){
+	indice+=4;
+	numarti++;
+      }
+      if(indice==4*NB_MAX_ARTICLES){
+	printf("ERREUR on peut plus publier\n");
+	break;
+      }
+      for (i=0;i<4;i++)
+	contenu[4*numarti+i]=message->msg_text[i];
+      message_envoi->operation='p';
+      fprintf(stdout,"Article %d indice %d publié MAGUEULE %s\n",numarti,indice,contenu);
+	    
       break;
     case EFFACEMENT: /* supprimer l'article */
       /* verif semaphore theme */
-      //*contenu=strtok(*contenu,tmp);//NON
-      fprintf(stdout,"Article supprimé BOYAH\n");
+      if(message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
+	printf("erreur effacement impossible \n");
+	break;
+      }
+      for (i=0;i<4;i++)
+	contenu[4*message->num_article+i]='-';
+      fprintf(stdout,"Article %d supprimé BOYAH %s \n",message->num_article,contenu);
+      message_envoi->operation='e';
       break;
     default: break;
     }
     /* On previent le journaliste de l'action */
-    //  if (msgsnd(clef_journa,&messageenvoi,10,IPC_NOWAIT)==-1)
-    //exit(-1);
-   
-    shmdt(&id_message);
-    fprintf(stderr,"MESSAGE traité ?\n");
+    message_envoi->msg_type=message->num_journaliste;
+    if (msgsnd(id_filemessage,message_envoi,sizeof(struct tampon),0)==-1)
+
+    shmdt(&tabid_shm[message->theme]);
+    fprintf(stderr,"MESSAGE traité !!!!!!!!!\n\n");
   }
 
   /* On supprime les sémaphores */

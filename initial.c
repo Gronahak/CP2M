@@ -290,11 +290,17 @@ int main (int argc, char *argv[]){
   for (i=0;i<nb_themes;i++){
     cle_smp=ftok(FICHIER_CLE,'a'+i+2);
     char cle_smp_chaine[50]={'\0'};
+    char* contenu, init[NB_MAX_ARTICLES*4];
     if ((id_smp=shmget(cle_smp,NB_MAX_ARTICLES*4,IPC_CREAT|IPC_EXCL|0666))==-1)
       {
 	printf("Création du segment de mémoire partagée impossible\n");
 	exit(1);
       }
+    for(i=0;i<NB_MAX_ARTICLES*4;i++)
+      init[i]='-';
+    contenu=shmat(id_smp,0,0);
+    strcpy(contenu,init);
+    shmdt(&id_smp);
     printf("\tcle du smp %d : %xd\n",i,cle_smp);
     sprintf(cle_smp_chaine,"%d",cle_smp);
     fputs(cle_smp_chaine,fich_cle);
@@ -353,9 +359,9 @@ int main (int argc, char *argv[]){
     rand_requete=rand()%10+1;
 
     categorie_requete=EFFACEMENT;
-    if (rand_requete>1)
+    if (rand_requete>2)  //1
       categorie_requete=PUBLICATION;
-    if (rand_requete>3)
+    if (rand_requete>8)  //3
       categorie_requete=CONSULTATION;
 
     printf("dont la catégorie est: %c||%d\n",categorie_requete,rand_requete);
