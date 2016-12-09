@@ -227,20 +227,20 @@ int main (int argc, char *argv[]){
       switch (message_recu->operation){
       case 'c':
 	if (strcmp(message_recu->msg_text,"ERRN")==0)
-	  printf("[Journaliste %d] La consultation a échouée, le numéro d'article %d (theme %d) n'existe pas.\n",message->num_journaliste,message->num_article,message->theme);
-	else printf("[Journaliste %d] Consultation de l'article %d [%s] (theme %d) réussie.\n",message->num_journaliste,message->num_article,message_recu->msg_text,message->theme);
+	  printf("\x1b[31m[Journaliste %d] La consultation a échouée, le numéro d'article %d (theme %d) n'existe pas.\n\x1b[0m",message->num_journaliste,message->num_article,message->theme);
+	else printf("\x1b[32m[Journaliste %d] Consultation de l'article %d [%s] (theme %d) réussie.\n\x1b[0m",message->num_journaliste,message->num_article,message_recu->msg_text,message->theme);
 	break;
       case 'p':
 	if (strcmp(message_recu->msg_text,"ERMA")==0)
-	  printf("[Journaliste %d] La publication a échouée, le nombre d'articles maximum pour le theme %d est atteint.\n",message->num_journaliste,message->theme);
-	else printf("[Journaliste %d] Publication de l'article %d [%s] (theme %d) réussie.\n",message->num_journaliste,message_recu->num_article,message->msg_text,message->theme);
+	  printf("\x1b[31m[Journaliste %d] La publication a échouée, le nombre d'articles maximum pour le theme %d est atteint.\n\x1b[0m",message->num_journaliste,message->theme);
+	else printf("\x1b[32m[Journaliste %d] Publication de l'article %d [%s] (theme %d) réussie.\n\x1b[0m",message->num_journaliste,message_recu->num_article,message->msg_text,message->theme);
 	break;
       case 'e':
 	if (strcmp(message_recu->msg_text,"ERNE")==0)
-	  printf("[Journaliste %d] L'effacement a échoué, l'article %d (theme %d) n'existe pas.\n",message->num_journaliste,message->num_article,message->theme);
-	else printf("[Journaliste %d] Effacement de l'article %d (theme %d) réussi.\n",message->num_journaliste,message->num_article,message->theme);
+	  printf("\x1b[31m[Journaliste %d] L'effacement a échoué, l'article %d (theme %d) n'existe pas.\n\x1b[0m",message->num_journaliste,message->num_article,message->theme);
+	else printf("\x1b[32m[Journaliste %d] Effacement de l'article %d (theme %d) réussi.\n\x1b[0m",message->num_journaliste,message->num_article,message->theme);
       }
-  printf("\033[0m");
+  printf("\x1b[0m");
 
       break; /* On casse la boucle while */
     }

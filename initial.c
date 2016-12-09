@@ -1,3 +1,9 @@
+/*********************************************************/
+/*                                                       */
+/*                  Programme Initial                    */
+/*                                                       */
+/*********************************************************/
+
 #include "types.h"
 
 void animation_coup_de_balai(){
@@ -285,7 +291,7 @@ int main (int argc, char *argv[]){
 
   ushort *tab;
   tab = (ushort*)malloc((4+nb_themes)*sizeof(ushort));
-  if (tab==NULL){printf("Y'a plus de memoiren abandonnez le navire.\n") ;exit(-1);}
+  if (tab==NULL){printf("Y'a plus de memoire abandonnez le navire.\n") ;exit(-1);}
   for (i=0;i<4+nb_themes;i++)tab[i]=1;
   ushort tab2[NB_MAX_JOURNALISTES]={0};
 

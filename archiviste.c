@@ -35,7 +35,7 @@ void mon_sigaction(int signal, void(*f)(int)){
 /*      -nb_themes          */
 
 void modification_num_sem(int num,struct sembuf *action){
-  /* Fonction pour modifier le numéro du sémaphore que l'on veut modifier (<num>) quand on veut faire une action P ou Z (<action>) */
+  /* Fonction pour modifier le numéro du sémaphore que l'on veut modifier (<num>) quand on veut faire une action P ou V (<action>) */
   action->sem_num=num;
 }
 
@@ -172,14 +172,14 @@ int main (int argc, char *argv[]){
       message_envoi->operation='c';
       /* On verifie si on peut consulter l'article demandé */
       if (message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
-	printf("\t[Archiviste %d] Numéro d'article non existant (consultation)\n",numero_ordre);
+	printf("\x1b[35m\t[Archiviste %d] Numéro d'article non existant (consultation)\n\x1b[0m",numero_ordre);
 	strcpy(message_envoi->msg_text,"ERRN");
       }
       else{
 	/* On recopie l'article dans le message qu'on enverra au journaliste */
 	for (i=0;i<4;i++)
 	  message_envoi->msg_text[i]=contenu[4*message->num_article+i];
-	printf("\t[Archiviste %d] Consultation de l'article %d (theme %d)\n",numero_ordre,message->num_article,message->theme);
+	printf("\x1b[36m\t[Archiviste %d] Consultation de l'article %d (theme %d)\n\x1b[0m",numero_ordre,message->num_article,message->theme);
       }
       //// Prendre le sémaphore (nombre) qui est le 3eme:
       modification_num_sem(3,&P);      
@@ -241,7 +241,7 @@ int main (int argc, char *argv[]){
       /* Je vérifie si c'est possible */
       if(indice==4*NB_MAX_ARTICLES){
 	strcpy(message_envoi->msg_text,"ERMA");
-	printf("\t[Archiviste %d] Nombre maximum d'aricles atteint pour le theme %d (publication).\n",numero_ordre,message->theme);
+	printf("\x1b[35m\t[Archiviste %d] Nombre maximum d'aricles atteint pour le theme %d (publication).\n\x1b[0m",numero_ordre,message->theme);
        
       }
       else {
@@ -249,7 +249,7 @@ int main (int argc, char *argv[]){
 	for (i=0;i<4;i++)
 	  contenu[4*numarti+i]=message->msg_text[i];
 	message_envoi->num_article=numarti;
-	printf("\t[Archiviste %d] Article %d [%s] (theme %d) publié.\n",numero_ordre,numarti,message->msg_text,message->theme);
+	printf("\x1b[36m\t[Archiviste %d] Article %d [%s] (theme %d) publié.\n\x1b[0m",numero_ordre,numarti,message->msg_text,message->theme);
       }
       // Fin Ecriture    FIN SECTION CRITIQUE
  
@@ -310,14 +310,14 @@ int main (int argc, char *argv[]){
       message_envoi->operation='e';
       /* On verifie si on peut effacer l'article */
       if(message->num_article>=NB_MAX_ARTICLES || contenu[4*message->num_article]=='-'){
-	printf("\t[Archiviste %d] Effacement de l'article %d (theme %d) impossible (non existant).\n",numero_ordre,message->num_article,message->theme);
+	printf("\x1b[35m\t[Archiviste %d] Effacement de l'article %d (theme %d) impossible (non existant).\n\x1b[0m",numero_ordre,message->num_article,message->theme);
 	strcpy(message_envoi->msg_text,"ERNE");
       }
       else{
 	/* On l'efface dans le SHM (remplace par -) */
 	for (i=0;i<4;i++)
 	  contenu[4*message->num_article+i]='-';
-	fprintf(stdout,"\t[Archiviste %d] Article %d (theme %d) supprimé.\n",numero_ordre,message->num_article,message->theme);
+	fprintf(stdout,"\x1b[36m\t[Archiviste %d] Article %d (theme %d) supprimé.\n\x1b[0m",numero_ordre,message->num_article,message->theme);
       }
 
       
